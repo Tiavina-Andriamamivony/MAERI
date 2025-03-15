@@ -1,9 +1,7 @@
-"use client";
 
 import { cn } from "@/lib/utils";
 import { InteractiveGridPattern } from "./magicui/interactive-grid-pattern";
 import { TextAnimate } from "./magicui/text-animate";
-import { useTheme } from "next-themes";
 import { Button } from "./ui/button";
 import { WordRotateDemo } from "./word-rotate";
 import Link from "next/link";
@@ -11,8 +9,6 @@ import { AuroraText } from "./magicui/aurora-text";
 
 export function InteractiveGridPatternDemo() {
 
-    const theme = useTheme();
-    const shadowColor = theme.resolvedTheme === "dark" ? "white" : "black";
 
 
   return (
