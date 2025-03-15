@@ -16,7 +16,7 @@ export function InteractiveGridPatternDemo() {
 
 
   return (
-    <div className="relative flex h-screen w-screen box-border flex-col items-center justify-center overflow-hidden rounded-lg border bg-background">
+    <div className="relative flex h-screen w-screen box-border flex-col items-center justify-center overflow-hidden rounded-lg  bg-background">
       <InteractiveGridPattern
         className={cn(
           "[mask-image:radial-gradient(400px_circle_at_center,white,transparent)]",
@@ -24,21 +24,23 @@ export function InteractiveGridPatternDemo() {
         )}
         
       />
-      <h1 className="text-4xl font-bold tracking-tighter md:text-5xl lg:text-7xl">
+      <h1 className="text-5xl font-bold tracking-tighter md:text-5xl lg:text-7xl text-center m-2">
       Welcom to <AuroraText>MAERI Consulting</AuroraText>
     </h1>
     <br />
 
-          <TextAnimate animation="blurInUp" by="character" once className="text-4xl font-bold text-center ">
+          <TextAnimate animation="blurInUp" by="character" once className=" md:text-4xl font-bold text-center m-2">
           Empowering Businesses with Premium Materials & Expertise.
     </TextAnimate>
     <br />
     <WordRotateDemo></WordRotateDemo>
     <br />
-    <Link href="/services" className="z-50">
-        <Button className="mt-4">Explore Our Services</Button>
+    
+  <Button className="mt-4">
+<Link href="/services" className="z-50 cursor-pointer">
+    Explore Our Services
       </Link>
-
+</Button>
     </div>
   );
 }
