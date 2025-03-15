@@ -4,7 +4,6 @@ import { HoveredLink, Menu, MenuItem, ProductItem } from "./ui/navbar-menu";
 import { cn } from "@/lib/utils";
 import { ModeToggle } from "./theme-button";
 import { HomeIcon, Menu as MenuIcon, X } from "lucide-react";
-import { Button } from "./ui/button";
 import Link from "next/link";
 
 export default function Navbar({ className }: { className?: string }) {

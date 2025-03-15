@@ -10,9 +10,9 @@ import { BentoGrid, BentoGridItem } from "./ui/bento-grid";
 
 export function Services() {
     return (
-        <div className="container mx-auto px-4 py-8">
+        <div className={cn("container mx-auto px-4 py-8")}>
         <h1 className="text-4xl md:text-6xl font-bold text-center mt-44 mb-8">Services</h1>
-        <BentoGrid className="max-w-full md:max-w-6xl mx-auto md:auto-rows-[20rem] box-border">
+        <BentoGrid className={cn("max-w-full md:max-w-6xl mx-auto md:auto-rows-[20rem] box-border")}>
           {items.map((item, i) => (
             <BentoGridItem
               key={i}
@@ -26,7 +26,7 @@ export function Services() {
         </BentoGrid>
       </div>
     );
-  }
+}
 const Skeleton = () => (
   <div className="flex flex-1 w-11/12 h-full min-h-[6rem] rounded-xl   dark:bg-dot-white/[0.2] bg-dot-black/[0.2] [mask-image:radial-gradient(ellipse_at_center,white,transparent)]  border border-transparent dark:border-white/[0.2] bg-neutral-100 dark:bg-black"></div>
 );
