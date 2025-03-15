@@ -111,6 +111,7 @@ export const ProductItem = ({
 
 interface HoveredLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
   children: React.ReactNode;
+  href?: string;  // Make href optional and explicitly type it
 }
 
 export const HoveredLink = ({ children, href = '/', ...rest }: HoveredLinkProps) => {

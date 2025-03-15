@@ -7,6 +7,7 @@ import { WordRotateDemo } from "./word-rotate";
 import Link from "next/link";
 import { AuroraText } from "./magicui/aurora-text";
 
+// Remove any unused shadowColor variable if it exists in your code
 export function InteractiveGridPatternDemo() {
 
 
