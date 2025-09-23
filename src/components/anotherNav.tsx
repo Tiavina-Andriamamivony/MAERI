@@ -35,9 +35,10 @@ export default function Navbar({ className }: { className?: string }) {
         {/* Services Section */}
         <MenuItem setActive={setActive} active={active} item="Services" >
           <div className="flex flex-col space-y-4 text-sm">
-            <HoveredLink href="/services/raw-material-supply">Fourniture de matières premières</HoveredLink>
-            <HoveredLink href="/services/supplier-networking">Mise en relation avec les fournisseurs</HoveredLink>
-            <HoveredLink href="/services/professional-training">Formations professionnelles</HoveredLink>
+            <HoveredLink href="/services/approvisionnement">Approvisionnement industriel</HoveredLink>
+            <HoveredLink href="/services/formation">Formation professionnelle</HoveredLink>
+            <HoveredLink href="/services/conseil-informatique">Conseil informatique</HoveredLink>
+            <HoveredLink href="/services/sourcing">Sourcing local et international</HoveredLink>
           </div>
           
         </MenuItem>
@@ -46,24 +47,22 @@ export default function Navbar({ className }: { className?: string }) {
         <MenuItem setActive={setActive} active={active} item="Produits">
           <div className="text-sm grid grid-cols-2 gap-10 p-4">
             <ProductItem
-              title="Tuyaux industriels"
-              href="/products/industrial-pipes"
+              title="Équipements industriels"
+              href="/products/equipements-industriels"
               src="https://i.pinimg.com/474x/3a/a7/48/3aa7483999c8d159e37331dd626e11fc.jpg"
-              description="Large gamme de tuyaux pour les entreprises."
+              description="Rouleaux métalliques, roulements, courroies, pompes hydrauliques."
             />
             <ProductItem
-              title="Matériaux de construction"
-              href="/products/construction-materials"
+              title="Matières premières"
+              href="/products/matieres-premieres"
               src="https://i.pinimg.com/474x/aa/cb/6d/aacb6dd4af7e313394a15a0b9da27cb1.jpg"
-
-              description="Matériaux de haute qualité pour vos projets."
+              description="Large gamme de matières premières industrielles."
             />
             <ProductItem
-              title="Équipements spécialisés"
-              href="/products/specialized-equipment"
-            src="https://i.pinimg.com/474x/63/31/ec/6331ec4b7b5b53b3ec175ae968187449.jpg"
-
-              description="Équipements pour répondre à vos besoins spécifiques."
+              title="Accessoires techniques"
+              href="/products/accessoires-techniques"
+              src="https://i.pinimg.com/474x/63/31/ec/6331ec4b7b5b53b3ec175ae968187449.jpg"
+              description="Joints, para-huile, tuyaux, vannes, moteurs électriques."
             />
           </div>
         </MenuItem>
@@ -71,26 +70,29 @@ export default function Navbar({ className }: { className?: string }) {
         {/* Pricing Section */}
         <MenuItem setActive={setActive} active={active} item="Tarifs">
           <div className="flex flex-col space-y-4 text-sm">
-            <HoveredLink href="/pricing/small-business">Petites entreprises</HoveredLink>
-            <HoveredLink href="/pricing/medium-business">Entreprises moyennes</HoveredLink>
-            <HoveredLink href="/pricing/large-business">Grandes entreprises</HoveredLink>
+            <HoveredLink href="/pricing/start-up">Start-ups</HoveredLink>
+            <HoveredLink href="/pricing/pme">PME</HoveredLink>
+            <HoveredLink href="/pricing/grands-groupes">Grands groupes</HoveredLink>
           </div>
         </MenuItem>
 
         <MenuItem setActive={setActive} active={active} item="Formation">
           <div className="flex flex-col space-y-4 text-sm">
-            <HoveredLink href="/training/basic">Formation de base</HoveredLink>
-            <HoveredLink href="/training/advanced">Formation avancée</HoveredLink>
-            <HoveredLink href="/training/specialized">Formation spécialisée</HoveredLink>
+            <HoveredLink href="/training/accueil-client">Accueil client</HoveredLink>
+            <HoveredLink href="/training/vente-negociation">Vente et négociation</HoveredLink>
+            <HoveredLink href="/training/management-leadership">Management et leadership</HoveredLink>
+            <HoveredLink href="/training/recouvrement">Techniques de recouvrement</HoveredLink>
+            <HoveredLink href="/training/gestion-stock">Gestion de stock</HoveredLink>
           </div>
         </MenuItem>
 
         {/* About Us Section */}
         <MenuItem setActive={setActive} active={active} item="À propos">
           <div className="flex flex-col space-y-4 text-sm">
-            <HoveredLink href="/about/history">Notre histoire</HoveredLink>
-            <HoveredLink href="/about/team">Notre équipe</HoveredLink>
+            <HoveredLink href="/about/histoire">Notre histoire</HoveredLink>
+            <HoveredLink href="/about/equipe">Notre équipe</HoveredLink>
             <HoveredLink href="/about/mission">Notre mission</HoveredLink>
+            <HoveredLink href="/about/partenaire-confiance">Partenaire de confiance</HoveredLink>
           </div>
         </MenuItem>
 
@@ -99,7 +101,8 @@ export default function Navbar({ className }: { className?: string }) {
           <div className="flex flex-col space-y-4 text-sm">
             <HoveredLink href="/contact/general">Contact général</HoveredLink>
             <HoveredLink href="/contact/support">Support technique</HoveredLink>
-            <HoveredLink href="/contact/sales">Service commercial</HoveredLink>
+            <HoveredLink href="/contact/commercial">Service commercial</HoveredLink>
+            <HoveredLink href="/contact/devis">Demande de devis</HoveredLink>
           </div>
         </MenuItem>
 
@@ -118,12 +121,12 @@ export default function Navbar({ className }: { className?: string }) {
               <HomeIcon className="w-6 h-6" />
             </Link>
             
-            <Link href="/services" className= "   z-50 cursor-pointer hover:border-b-2 hover:border-current transition-all duration-200">Services</Link>
-            <Link href="/products" className= "   z-50 cursor-pointer hover:border-b-2 hover:border-current transition-all duration-200">Produits</Link>
-            <Link href="/pricing" className= "   z-50 cursor-pointer hover:border-b-2 hover:border-current transition-all duration-200">Tarifs</Link>
-            <Link href="/training" className= "   z-50 cursor-pointer hover:border-b-2 hover:border-current transition-all duration-200">Formation</Link>
-            <Link href="/about" className= "   z-50 cursor-pointer hover:border-b-2 hover:border-current transition-all duration-200">À propos</Link>
-            <Link href="/contact" className= "   z-50 cursor-pointer hover:border-b-2 hover:border-current transition-all duration-200">Contact</Link>
+            <Link href="/services" className="z-50 cursor-pointer hover:border-b-2 hover:border-current transition-all duration-200">Services</Link>
+            <Link href="/products" className="z-50 cursor-pointer hover:border-b-2 hover:border-current transition-all duration-200">Produits</Link>
+            <Link href="/pricing" className="z-50 cursor-pointer hover:border-b-2 hover:border-current transition-all duration-200">Tarifs</Link>
+            <Link href="/training" className="z-50 cursor-pointer hover:border-b-2 hover:border-current transition-all duration-200">Formation</Link>
+            <Link href="/about" className="z-50 cursor-pointer hover:border-b-2 hover:border-current transition-all duration-200">À propos</Link>
+            <Link href="/contact" className="z-50 cursor-pointer hover:border-b-2 hover:border-current transition-all duration-200">Contact</Link>
             
             <ModeToggle />
           </div>
