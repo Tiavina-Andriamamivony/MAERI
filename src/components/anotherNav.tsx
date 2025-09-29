@@ -37,7 +37,9 @@ export default function Navbar({ className }: { className?: string }) {
           <div className="flex flex-col space-y-4 text-sm">
             <HoveredLink href="/services/approvisionnement">Approvisionnement industriel</HoveredLink>
             <HoveredLink href="/services/formation">Formation professionnelle</HoveredLink>
-            <HoveredLink href="/services/conseil-informatique">Conseil informatique</HoveredLink>
+            <HoveredLink href="/services/conseil-informatique">
+              Conseil informatique et Digital
+            </HoveredLink>
             <HoveredLink href="/services/sourcing">Sourcing local et international</HoveredLink>
           </div>
           

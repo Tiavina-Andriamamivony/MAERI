@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
 };
 module.exports = {
   images: {
-    domains: ['assets.aceternity.com','via.placeholder.com','i.pinimg.com'],
+    domains: ['assets.aceternity.com','via.placeholder.com','i.pinimg.com','images.unsplash.com'],
   },
 }
 
