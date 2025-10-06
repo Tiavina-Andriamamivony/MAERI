@@ -7,6 +7,9 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { BarChart, Palette, Code, Lightbulb } from "lucide-react";
 
+
+
+/* eslint-disable react/no-unescaped-entities */
 export default function ConseilInformatique() {
   const services = [
     {
