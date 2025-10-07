@@ -22,7 +22,7 @@ export function InteractiveGridPatternDemo() {
         
       />
       <h1 className="text-5xl font-bold tracking-tighter md:text-5xl lg:text-7xl text-center m-2">
-      Welcome to <AuroraText>MAERI Consulting</AuroraText>
+      Welcome to <AuroraText>MA-ERI Consulting</AuroraText>
     </h1>
     <br />
 

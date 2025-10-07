@@ -69,7 +69,7 @@ export default function ApprovisionnementPage() {
           Approvisionnement Industriel
         </h1>
         <p className="text-lg md:text-xl max-w-3xl mx-auto text-muted-foreground">
-          Chez MAERI Consulting, nous accompagnons toutes les entreprises dans leurs besoins 
+          Chez MA-ERI Consulting, nous accompagnons toutes les entreprises dans leurs besoins 
           d'approvisionnement en matières premières et équipements industriels.
         </p>
       </motion.div>
