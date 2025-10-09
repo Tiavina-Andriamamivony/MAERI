@@ -22,7 +22,7 @@ export const metadata = {
     title: 'MA-ERI Consulting',
     description: 'Fourniture de matières premières, mise en relation avec les fournisseurs, formations professionnelles, et consultance IT. Startup malgache dans le rôle est de vous aider dans votre développement.',
     url: 'https://maeri.vercel.app',
-    siteName: 'MAERI Consulting',
+    siteName: 'MA-ERI Consulting',
     locale: 'fr_FR',
     type: 'website',
   },
