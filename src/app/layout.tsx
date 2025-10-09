@@ -16,11 +16,11 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
   metadataBase: new URL('https://maeri.vercel.app'),
-  title: 'MAERI Consulting',
-  description: 'Fourniture de matières premières, mise en relation avec les fournisseurs, et formations professionnelles.',
+  title: 'MA-ERI Consulting',
+  description: 'Fourniture de matières premières, mise en relation avec les fournisseurs, formations professionnelles, et consultance IT. Startup malgache dans le rôle est de vous aider dans votre développement.',
   openGraph: {
-    title: 'MAERI Consulting',
-    description: 'Fourniture de matières premières, mise en relation avec les fournisseurs, et formations professionnelles.',
+    title: 'MA-ERI Consulting',
+    description: 'Fourniture de matières premières, mise en relation avec les fournisseurs, formations professionnelles, et consultance IT. Startup malgache dans le rôle est de vous aider dans votre développement.',
     url: 'https://maeri.vercel.app',
     siteName: 'MAERI Consulting',
     locale: 'fr_FR',
