@@ -16,7 +16,7 @@ export default function Home() {
             MA-ERI accompagne les entreprises avec des fournitures industrielles, des formations professionnelles et des services digitaux.
           </p>
           <div className="flex items-center justify-center gap-4">
-            <Link href="/contact/general" className="inline-flex items-center rounded-md bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:opacity-95">
+            <Link href="/contact" className="inline-flex items-center rounded-md bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:opacity-95">
               Contactez-nous
             </Link>
             <Link href="/services" className="inline-flex items-center rounded-md border border-input px-5 py-3 text-sm font-medium">
