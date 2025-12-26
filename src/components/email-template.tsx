@@ -24,7 +24,7 @@ interface EmailTemplateProps {
     message: string;
 }
 
-const baseUrl = 'https://maeri.vercel.app';
+const baseUrl = 'https://ma-eri.vercel.app';
 
 export const EmailTemplate = ({
     name,
@@ -52,7 +52,7 @@ export const EmailTemplate = ({
             <Container style={container}>
                 <Section style={logoSection}>
                     <Img
-                        src={`/logo_bg.png`}
+                        src={`${baseUrl}/logo_bg.png`}
                         width="150"
                         height="auto"
                         alt="MA-ERI Consulting"
