@@ -5,7 +5,7 @@ export function WordRotateDemo() {
   return (
     <WordRotate
       className="md:text-4xl font-bold text-black dark:text-white"
-      words={["Seamless sourcing.", "Elite training.","Tailored solutions.","IT consulting."]}
+      words={["Local and global procurment.", "Elite training.","Tailored solutions.","IT consulting."]}
     />
   );
 }

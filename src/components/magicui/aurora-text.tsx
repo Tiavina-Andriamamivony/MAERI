@@ -12,7 +12,7 @@ interface AuroraTextProps {
 
 export function AuroraText({
   children,
-  className = "",
+  className = "text-4xl md:text-4xl lg:text-5xl ",
   colors = ["#FF0080", "#7928CA", "#0070F3", "#38bdf8", "#a855f7", "#2dd4bf"],
   speed = 1,
 }: AuroraTextProps) {

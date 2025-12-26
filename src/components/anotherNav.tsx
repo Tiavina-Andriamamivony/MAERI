@@ -36,55 +36,43 @@ export default function Navbar({ className }: { className?: string }) {
         <MenuItem setActive={setActive} active={active} item="Services" >
           <div className="flex flex-col space-y-4 text-sm">
             <HoveredLink href="/services/approvisionnement">Approvisionnement industriel</HoveredLink>
-            <HoveredLink href="/services/formation">Formation professionnelle</HoveredLink>
+            <HoveredLink href="/services/professional-training">Formation professionnelle</HoveredLink>
             <HoveredLink href="/services/conseil-informatique">
               Conseil informatique et Digital
             </HoveredLink>
-            <HoveredLink href="/services/sourcing">Sourcing local et international</HoveredLink>
+            <HoveredLink href="/services/raw-material-supply">Approvisionnement matières premières</HoveredLink>
+            <HoveredLink href="/services/supplier-networking">Réseau de fournisseurs</HoveredLink>
           </div>
-          
         </MenuItem>
         
         {/* Products Section */}
         <MenuItem setActive={setActive} active={active} item="Produits">
           <div className="text-sm grid grid-cols-2 gap-10 p-4">
             <ProductItem
-              title="Équipements industriels"
-              href="/products/equipements-industriels"
+              title="Matériaux de construction"
+              href="/products/construction-materials"
               src="https://i.pinimg.com/474x/3a/a7/48/3aa7483999c8d159e37331dd626e11fc.jpg"
-              description="Rouleaux métalliques, roulements, courroies, pompes hydrauliques."
+              description="Matériaux de qualité pour vos projets de construction."
             />
             <ProductItem
-              title="Matières premières"
-              href="/products/matieres-premieres"
+              title="Tuyaux industriels"
+              href="/products/industrial-pipes"
               src="https://i.pinimg.com/474x/aa/cb/6d/aacb6dd4af7e313394a15a0b9da27cb1.jpg"
-              description="Large gamme de matières premières industrielles."
+              description="Solutions complètes de tuyauterie industrielle."
             />
             <ProductItem
-              title="Accessoires techniques"
-              href="/products/accessoires-techniques"
+              title="Équipements spécialisés"
+              href="/products/specialized-equipment"
               src="https://i.pinimg.com/474x/63/31/ec/6331ec4b7b5b53b3ec175ae968187449.jpg"
-              description="Joints, para-huile, tuyaux, vannes, moteurs électriques."
+              description="Équipements de pointe pour l'industrie."
             />
           </div>
         </MenuItem>
-
-        {/* Pricing Section */}
-        <MenuItem setActive={setActive} active={active} item="Tarifs">
-          <div className="flex flex-col space-y-4 text-sm">
-            <HoveredLink href="/pricing/start-up">Start-ups</HoveredLink>
-            <HoveredLink href="/pricing/pme">PME</HoveredLink>
-            <HoveredLink href="/pricing/grands-groupes">Grands groupes</HoveredLink>
-          </div>
-        </MenuItem>
-
         <MenuItem setActive={setActive} active={active} item="Formation">
           <div className="flex flex-col space-y-4 text-sm">
-            <HoveredLink href="/training/accueil-client">Accueil client</HoveredLink>
-            <HoveredLink href="/training/vente-negociation">Vente et négociation</HoveredLink>
-            <HoveredLink href="/training/management-leadership">Management et leadership</HoveredLink>
-            <HoveredLink href="/training/recouvrement">Techniques de recouvrement</HoveredLink>
-            <HoveredLink href="/training/gestion-stock">Gestion de stock</HoveredLink>
+            <HoveredLink href="/training/basic">Formation de base</HoveredLink>
+            <HoveredLink href="/training/advanced">Formation avancée</HoveredLink>
+            <HoveredLink href="/training/specialized">Formation spécialisée</HoveredLink>
           </div>
         </MenuItem>
 
@@ -99,14 +87,7 @@ export default function Navbar({ className }: { className?: string }) {
         </MenuItem>
 
         {/* Contact Section */}
-        <MenuItem setActive={setActive} active={active} item="Contact">
-          <div className="flex flex-col space-y-4 text-sm">
-            <HoveredLink href="/contact/general">Contact général</HoveredLink>
-            <HoveredLink href="/contact/support">Support technique</HoveredLink>
-            <HoveredLink href="/contact/commercial">Service commercial</HoveredLink>
-            <HoveredLink href="/contact/devis">Demande de devis</HoveredLink>
-          </div>
-        </MenuItem>
+        <Link href="/contact">Contact</Link>
 
 
         <br />
@@ -118,17 +99,47 @@ export default function Navbar({ className }: { className?: string }) {
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div className="lg:hidden fixed inset-0 bg-background/95 backdrop-blur-sm">
-          <div className="flex flex-col items-center justify-center h-full space-y-6 text-lg">
+          <div className="flex flex-col items-center justify-center h-full space-y-6 text-lg overflow-y-auto py-8">
             <Link href="/" className="cursor-pointer">
               <HomeIcon className="w-6 h-6" />
             </Link>
             
-            <Link href="/services" className="z-50 cursor-pointer hover:border-b-2 hover:border-current transition-all duration-200">Services</Link>
-            <Link href="/products" className="z-50 cursor-pointer hover:border-b-2 hover:border-current transition-all duration-200">Produits</Link>
-            <Link href="/pricing" className="z-50 cursor-pointer hover:border-b-2 hover:border-current transition-all duration-200">Tarifs</Link>
-            <Link href="/training" className="z-50 cursor-pointer hover:border-b-2 hover:border-current transition-all duration-200">Formation</Link>
-            <Link href="/about" className="z-50 cursor-pointer hover:border-b-2 hover:border-current transition-all duration-200">À propos</Link>
-            <Link href="/contact" className="z-50 cursor-pointer hover:border-b-2 hover:border-current transition-all duration-200">Contact</Link>
+            <div className="flex flex-col items-center space-y-4">
+              <span className="font-semibold">Services</span>
+              <Link href="/services/approvisionnement" className="text-sm">Approvisionnement</Link>
+              <Link href="/services/professional-training" className="text-sm">Formation</Link>
+              <Link href="/services/conseil-informatique" className="text-sm">Conseil IT</Link>
+              <Link href="/services/raw-material-supply" className="text-sm">Matières premières</Link>
+              <Link href="/services/supplier-networking" className="text-sm">Réseau fournisseurs</Link>
+            </div>
+
+            <div className="flex flex-col items-center space-y-4">
+              <span className="font-semibold">Produits</span>
+              <Link href="/products/construction-materials" className="text-sm">Matériaux construction</Link>
+              <Link href="/products/industrial-pipes" className="text-sm">Tuyaux industriels</Link>
+              <Link href="/products/specialized-equipment" className="text-sm">Équipements spécialisés</Link>
+            </div>
+
+            <div className="flex flex-col items-center space-y-4">
+              <span className="font-semibold">Tarifs</span>
+              <Link href="/pricing/small-business" className="text-sm">Petites entreprises</Link>
+              <Link href="/pricing/medium-business" className="text-sm">Moyennes entreprises</Link>
+              <Link href="/pricing/large-business" className="text-sm">Grandes entreprises</Link>
+            </div>
+
+            <div className="flex flex-col items-center space-y-4">
+              <span className="font-semibold">Formation</span>
+              <Link href="/training/basic" className="text-sm">Formation de base</Link>
+              <Link href="/training/advanced" className="text-sm">Formation avancée</Link>
+              <Link href="/training/specialized" className="text-sm">Formation spécialisée</Link>
+            </div>
+
+            <div className="flex flex-col items-center space-y-4">
+              <span className="font-semibold">Contact</span>
+              <Link href="/contact/general" className="text-sm">Contact général</Link>
+              <Link href="/contact/support" className="text-sm">Support technique</Link>
+              <Link href="/contact/sales" className="text-sm">Service commercial</Link>
+            </div>
             
             <ModeToggle />
           </div>
