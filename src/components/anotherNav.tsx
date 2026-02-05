@@ -46,28 +46,8 @@ export default function Navbar({ className }: { className?: string }) {
         </MenuItem>
         
         {/* Products Section */}
-        <MenuItem setActive={setActive} active={active} item="Produits">
-          <div className="text-sm grid grid-cols-2 gap-10 p-4">
-            <ProductItem
-              title="Matériaux de construction"
-              href="/products/construction-materials"
-              src="https://i.pinimg.com/474x/3a/a7/48/3aa7483999c8d159e37331dd626e11fc.jpg"
-              description="Matériaux de qualité pour vos projets de construction."
-            />
-            <ProductItem
-              title="Tuyaux industriels"
-              href="/products/industrial-pipes"
-              src="https://i.pinimg.com/474x/aa/cb/6d/aacb6dd4af7e313394a15a0b9da27cb1.jpg"
-              description="Solutions complètes de tuyauterie industrielle."
-            />
-            <ProductItem
-              title="Équipements spécialisés"
-              href="/products/specialized-equipment"
-              src="https://i.pinimg.com/474x/63/31/ec/6331ec4b7b5b53b3ec175ae968187449.jpg"
-              description="Équipements de pointe pour l'industrie."
-            />
-          </div>
-        </MenuItem>
+        <Link href="/services/approvisionnement">Produits</Link>
+
         <MenuItem setActive={setActive} active={active} item="Formation">
           <div className="flex flex-col space-y-4 text-sm">
             <HoveredLink href="/training/basic">Formation de base</HoveredLink>
