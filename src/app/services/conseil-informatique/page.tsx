@@ -1,101 +1,116 @@
-"use client";
-
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import Image from "next/image";
-import { motion } from "framer-motion";
-import Link from "next/link";
+import { CTABlock, FeatureGrid, PageHero, SectionHeading, Steps } from "@/components/brand";
 import { BarChart, Palette, Code, Lightbulb } from "lucide-react";
 
+export const metadata = {
+  title: "Conseil informatique & digital",
+  description:
+    "Data, UI/UX, applications web, microservices et transformation digitale pour les PME industrielles et de services.",
+};
 
+const offers = [
+  {
+    index: "01",
+    title: "Analyse de données",
+    description:
+      "Tableaux de bord opérationnels, audits data, mise en place d'indicateurs utiles. Excel, Power BI, ou outil sur mesure.",
+    icon: <BarChart className="h-5 w-5" />,
+  },
+  {
+    index: "02",
+    title: "Design UI / UX",
+    description:
+      "Interfaces web et mobiles qui respectent votre marque et qui se comprennent en trois secondes.",
+    icon: <Palette className="h-5 w-5" />,
+  },
+  {
+    index: "03",
+    title: "Applications & microservices",
+    description:
+      "Développement web moderne (Next.js, Node, Python) et architectures microservices quand c'est pertinent — pas par défaut.",
+    icon: <Code className="h-5 w-5" />,
+  },
+  {
+    index: "04",
+    title: "Transformation digitale",
+    description:
+      "Cadrage, choix d'outils, conduite du changement. Nous refusons les projets trop gros pour réussir.",
+    icon: <Lightbulb className="h-5 w-5" />,
+  },
+];
 
-/* eslint-disable react/no-unescaped-entities */
+const steps = [
+  { title: "Discovery", description: "Un ou deux ateliers pour comprendre votre flux, vos contraintes, vos utilisateurs." },
+  { title: "Cadrage", description: "Une proposition chiffrée, découpée en jalons livrables indépendamment." },
+  { title: "Livraison", description: "Sprints courts, démos régulières, mise en production progressive." },
+  { title: "Transmission", description: "Documentation, code lisible, formation de votre équipe. Pas de dépendance imposée." },
+];
+
 export default function ConseilInformatique() {
-  const services = [
-    {
-      title: "Analyse de données",
-      description: "Exploitation et analyse approfondie de vos données pour des insights stratégiques.",
-      icon: <BarChart className="w-10 h-10 text-primary" />,
-    },
-    {
-      title: "Design",
-      description: "Création d'interfaces utilisateur intuitives et d'expériences utilisateur optimales.",
-      icon: <Palette className="w-10 h-10 text-primary" />,
-    },
-    {
-      title: "Développement web",
-      description: "Développement d'applications web et de microservices sur mesure pour votre entreprise.",
-      icon: <Code className="w-10 h-10 text-primary" />,
-    },
-    {
-      title: "Solutions numériques",
-      description: "Solutions technologiques personnalisées et adaptées à vos objectifs spécifiques.",
-      icon: <Lightbulb className="w-10 h-10 text-primary" />,
-    },
-  ];
-
   return (
-    <div className="container mx-auto px-4 py-16 mt-32">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <h1 className="text-4xl md:text-5xl font-bold text-center mb-4">
-          Conseil et Services Informatiques
-        </h1>
-        <p className="text-xl text-center text-muted-foreground mb-12">
-          Solutions numériques adaptées à vos objectifs
-        </p>
-      </motion.div>
+    <>
+      <PageHero
+        index="→"
+        kicker="Services · Conseil IT & digital"
+        title={<>Le digital, <span className="italic text-muted-foreground">comme un outil,</span> pas comme une fin.</>}
+        lede="Nous construisons des logiciels qui font gagner du temps, pas des démonstrations techniques. Simples, robustes, maintenables."
+        meta={[
+          { label: "Stack", value: "Next · Node · Python" },
+          { label: "Méthode", value: "Sprints courts" },
+          { label: "Livraison", value: "4 à 12 semaines" },
+        ]}
+      />
 
-      <div className="relative h-[400px] w-full mb-16 rounded-xl overflow-hidden">
-        <Image
-          src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop"
-          alt="Digital Transformation"
-          fill
-          className="object-cover"
+      <section className="container mx-auto px-6 lg:px-10 py-24 md:py-32">
+        <SectionHeading
+          index="02"
+          kicker="Domaines"
+          title={<>Quatre pratiques, <span className="italic text-muted-foreground">une même philosophie.</span></>}
+          lede="Nous choisissons l'outil le plus simple qui résout le problème. Pas celui qui impressionne le plus."
         />
-        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-          <div className="text-white text-center max-w-2xl p-6">
-            <h2 className="text-3xl font-bold mb-4">
-              Services Informatiques Professionnels
-            </h2>
-            <p className="text-lg">
-              De l'analyse de données au développement web, nous vous accompagnons dans tous vos projets numériques
+        <div className="mt-16">
+          <FeatureGrid columns={4} features={offers} />
+        </div>
+      </section>
+
+      <section className="border-t border-border">
+        <div className="container mx-auto px-6 lg:px-10 py-24 md:py-32">
+          <SectionHeading
+            index="03"
+            kicker="Méthode"
+            title={<>Quatre étapes, <span className="italic text-muted-foreground">des jalons lisibles.</span></>}
+            lede="Chaque jalon a un livrable concret. À aucun moment vous ne payez pour du travail invisible."
+          />
+          <div className="mt-16">
+            <Steps steps={steps} />
+          </div>
+        </div>
+      </section>
+
+      <section className="container mx-auto px-6 lg:px-10 pb-24 md:pb-32">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 border-t border-border pt-16">
+          <div>
+            <h3 className="font-display text-display-md font-medium leading-[1.05] text-balance">
+              Un bon logiciel <span className="italic text-muted-foreground">disparaît dans l&apos;usage.</span>
+            </h3>
+          </div>
+          <div className="flex flex-col gap-4 text-muted-foreground leading-relaxed">
+            <p>
+              Nous livrons des outils qui se remarquent par leur absence de frictions, pas par leur nombre de fonctionnalités. Un bouton de plus n&apos;a jamais sauvé un projet.
+            </p>
+            <p>
+              Notre code est lisible, documenté, testable. Votre équipe doit pouvoir le reprendre, l&apos;amender et l&apos;étendre sans nous rappeler.
             </p>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-        {services.map((service, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
-          >
-            <Card className="p-6 h-full hover:shadow-lg transition-shadow dark:bg-background/95 dark:border-primary/20">
-              <div className="mb-4">{service.icon}</div>
-              <h3 className="text-2xl font-semibold mb-3">{service.title}</h3>
-              <p className="text-muted-foreground">{service.description}</p>
-            </Card>
-          </motion.div>
-        ))}
-      </div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.4 }}
-        className="text-center"
-      >
-        <h2 className="text-3xl font-bold mb-6">Besoin d'une solution informatique ?</h2>
-        <Button size="lg" asChild className="hover:bg-primary hover:text-primary-foreground dark:border-primary/50">
-          <Link href="/contact/devis">Demander un devis</Link>
-        </Button>
-      </motion.div>
-    </div>
+      <CTABlock
+        kicker="Un logiciel à construire ?"
+        title={<>Parlons du problème, <span className="italic">pas de la solution.</span></>}
+        description="Un premier échange de 30 minutes suffit pour savoir si le projet mérite d'être lancé — ou non."
+        primary={{ href: "/contact", label: "Cadrer un projet" }}
+        secondary={{ href: "/about/mission", label: "Notre approche" }}
+      />
+    </>
   );
 }
