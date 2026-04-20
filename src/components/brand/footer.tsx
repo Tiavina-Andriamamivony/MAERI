@@ -110,6 +110,9 @@ export function Footer() {
             <a href="mailto:contact-maeri@telma.net" className="hover:text-foreground transition-colors">
               contact-maeri@telma.net
             </a>
+            <a href="mailto:info-maeri@telma.net" className="hover:text-foreground transition-colors">
+              info-maeri@telma.net
+            </a>
           </div>
           <span className="kicker">Fait à Madagascar — (MG) 🇲🇬</span>
         </div>

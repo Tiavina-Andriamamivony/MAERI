@@ -39,6 +39,7 @@ const phones = [
 const emails = [
   { label: "Commercial", value: "commercial-maeri@telma.net" },
   { label: "Général", value: "contact-maeri@telma.net" },
+  { label: "Information", value: "info-maeri@telma.net" },
 ];
 
 export default function Contact() {
