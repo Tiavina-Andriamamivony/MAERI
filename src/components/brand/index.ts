@@ -8,3 +8,4 @@ export { PricingCard, type PricingTier } from "./pricing-card";
 export { Footer } from "./footer";
 export { Checklist } from "./checklist";
 export { Steps, type Step } from "./steps";
+export { BrandSeal } from "./brand-seal";

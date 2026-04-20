@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowUpRight, Factory, GraduationCap, Code2, Globe2 } from "lucide-react";
 import { HomeHero } from "@/components/brand/home-hero";
 import {
+  BrandSeal,
   CTABlock,
   FeatureGrid,
   Kicker,
@@ -94,6 +95,8 @@ export default function Home() {
   return (
     <>
       <HomeHero />
+
+      <BrandSeal />
 
       <StatBand
         caption="L'entreprise en chiffres"
