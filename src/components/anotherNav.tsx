@@ -132,8 +132,8 @@ export default function Navbar({ className }: { className?: string }) {
               src="/logo.png"
               alt="MA-ERI Consulting"
               width={56}
-              height={56}
-              className="rounded h-16 w-16 md:h-20 md:w-20"
+              height={60}
+              className="rounded h-16 w-20 md:h-20 md:w-24"
               priority
             />
             <span className="font-display text-lg md:text-xl font-medium tracking-tight leading-none">

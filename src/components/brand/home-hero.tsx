@@ -93,8 +93,8 @@ export function HomeHero() {
                   src="/logo.png"
                   alt="MA-ERI Consulting"
                   width={240}
-                  height={240}
-                  className="rounded h-32 w-32 md:h-44 md:w-44"
+                  height={246}
+                  className="rounded h-32 w-38 md:h-44 md:w-50"
                 />
                 <p className="font-display text-xl font-medium leading-snug text-pretty">
                   Un partenaire industriel, pédagogique et numérique, sous un
