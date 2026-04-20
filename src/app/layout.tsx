@@ -59,7 +59,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AnotherNav />
-          <main className="pt-24">{children}</main>
+          <main className="pt-20 md:pt-24">{children}</main>
           <Footer />
         </ThemeProvider>
       </body>

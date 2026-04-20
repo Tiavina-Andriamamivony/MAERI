@@ -67,11 +67,14 @@ export function Footer() {
               <Image
                 src="/logo.png"
                 alt="MA-ERI Consulting"
-                width={36}
-                height={36}
-                className="rounded"
+                width={56}
+                height={56}
+                className="rounded h-14 w-14"
               />
-              <span className="font-display text-lg font-medium">MA-ERI</span>
+              <span className="font-display text-lg font-medium leading-none">
+                MA-ERI{' '}
+                <span className="text-muted-foreground">Consulting</span>
+              </span>
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
               Startup malgache. Approvisionnement, formation, conseil IT pour les

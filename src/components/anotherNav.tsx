@@ -120,7 +120,7 @@ export default function Navbar({ className }: { className?: string }) {
         )}
       >
         <nav
-          className="container mx-auto px-6 lg:px-10 h-16 md:h-20 flex items-center justify-between gap-4"
+          className="container mx-auto px-6 lg:px-10 h-20 md:h-24 flex items-center justify-between gap-4"
           aria-label="Navigation principale"
         >
           <Link
@@ -131,13 +131,13 @@ export default function Navbar({ className }: { className?: string }) {
             <Image
               src="/logo.png"
               alt="MA-ERI Consulting"
-              width={32}
-              height={32}
-              className="rounded"
+              width={56}
+              height={56}
+              className="rounded h-16 w-16 md:h-20 md:w-20"
               priority
             />
-            <span className="font-display text-lg font-medium tracking-tight">
-              MA-ERI
+            <span className="font-display text-lg md:text-xl font-medium tracking-tight leading-none">
+              MA-ERI <span className="text-muted-foreground">Consulting</span>
             </span>
           </Link>
 
@@ -264,7 +264,7 @@ export default function Navbar({ className }: { className?: string }) {
             : "opacity-0 -translate-y-2 pointer-events-none",
         )}
       >
-        <div className="h-16 md:h-20" aria-hidden />
+        <div className="h-20 md:h-24" aria-hidden />
         <div className="container mx-auto px-6 pb-10 pt-6 flex flex-col gap-8">
           {NAV.map((item) => (
             <section key={item.label} className="flex flex-col gap-4">

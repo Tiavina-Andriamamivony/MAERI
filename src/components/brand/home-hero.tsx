@@ -30,7 +30,7 @@ export function HomeHero() {
       <div className="container mx-auto px-6 lg:px-10 pt-16 md:pt-24 pb-20 md:pb-32 relative">
         {/* top meta row */}
         <div className="flex items-center justify-between text-xs md:text-sm">
-          <Kicker accent>MA-ERI / 01</Kicker>
+          <Kicker accent>MA-ERI Consulting / 01</Kicker>
           <span className="kicker hidden md:inline">
             Édition {new Date().getFullYear()} — Toamasina, Madagascar
           </span>
@@ -92,9 +92,9 @@ export function HomeHero() {
                 <Image
                   src="/logo.png"
                   alt="MA-ERI Consulting"
-                  width={56}
-                  height={56}
-                  className="rounded"
+                  width={240}
+                  height={240}
+                  className="rounded h-32 w-32 md:h-44 md:w-44"
                 />
                 <p className="font-display text-xl font-medium leading-snug text-pretty">
                   Un partenaire industriel, pédagogique et numérique, sous un
@@ -124,6 +124,16 @@ export function HomeHero() {
                   </dd>
                 </div>
               </dl>
+
+              <a
+                href="mailto:info-maeri@telma.net"
+                className="mt-10 pt-6 border-t border-border group inline-flex items-center justify-between gap-3 text-sm font-medium hover:text-brand transition-colors"
+              >
+                <span className="kicker">Écrivez-nous</span>
+                <span className="font-mono tabular-nums text-foreground group-hover:text-brand transition-colors">
+                  info-maeri@telma.net
+                </span>
+              </a>
             </div>
           </aside>
         </div>
