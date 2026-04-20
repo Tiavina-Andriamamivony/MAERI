@@ -1,31 +1,46 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, JetBrains_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import AnotherNav from "@/components/anotherNav";
+import { Footer } from "@/components/brand/footer";
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
+  variable: "--font-sans",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-mono",
   subsets: ["latin"],
+  display: "swap",
+});
+
+const fraunces = Fraunces({
+  variable: "--font-serif",
+  subsets: ["latin"],
+  display: "swap",
+  axes: ["opsz", "SOFT"],
 });
 
 export const metadata = {
-  metadataBase: new URL('https://maeri.vercel.app'),
-  title: 'MA-ERI Consulting',
-  description: 'Fourniture de matières premières, mise en relation avec les fournisseurs, formations professionnelles, et consultance IT. Startup malgache dans le rôle est de vous aider dans votre développement.',
-  openGraph: {
-    title: 'MA-ERI Consulting',
-    description: 'Fourniture de matières premières, mise en relation avec les fournisseurs, formations professionnelles, et consultance IT. Startup malgache dans le rôle est de vous aider dans votre développement.',
-    url: 'https://maeri.vercel.app',
-    siteName: 'MA-ERI Consulting',
-    locale: 'fr_FR',
-    type: 'website',
+  metadataBase: new URL("https://maeri.vercel.app"),
+  title: {
+    default: "MA-ERI Consulting — Matière, savoir, digital.",
+    template: "%s · MA-ERI Consulting",
   },
-}
+  description:
+    "Startup malgache. Approvisionnement industriel, formation professionnelle et conseil informatique pour les entreprises qui construisent, produisent et forment.",
+  openGraph: {
+    title: "MA-ERI Consulting — Matière, savoir, digital.",
+    description:
+      "Startup malgache. Approvisionnement industriel, formation professionnelle et conseil informatique pour les entreprises qui construisent, produisent et forment.",
+    url: "https://maeri.vercel.app",
+    siteName: "MA-ERI Consulting",
+    locale: "fr_FR",
+    type: "website",
+  },
+};
 
 export default function RootLayout({
   children,
@@ -33,19 +48,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="fr" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${jetbrainsMono.variable} ${fraunces.variable} antialiased bg-background text-foreground`}
       >
-        <AnotherNav/>
-         <ThemeProvider
-            attribute="class"
-            defaultTheme="light"
-            enableSystem
-            disableTransitionOnChange
-          >
-            {children}
-          </ThemeProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AnotherNav />
+          <main className="pt-24">{children}</main>
+          <Footer />
+        </ThemeProvider>
       </body>
     </html>
   );

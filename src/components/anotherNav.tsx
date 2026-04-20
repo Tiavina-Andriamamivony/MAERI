@@ -1,130 +1,262 @@
 "use client";
-import React, { useState } from "react";
-import { HoveredLink, Menu, MenuItem} from "./ui/navbar-menu";
+
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { ModeToggle } from "./theme-button";
-import { HomeIcon, Menu as MenuIcon, X } from "lucide-react";
-import Link from "next/link";
+import { ArrowUpRight, Menu as MenuIcon, X } from "lucide-react";
+
+type NavChild = { href: string; label: string; hint?: string };
+type NavItem = {
+  label: string;
+  href?: string;
+  children?: NavChild[];
+  kicker?: string;
+};
+
+const NAV: NavItem[] = [
+  {
+    label: "Services",
+    kicker: "Ce que nous faisons",
+    children: [
+      { href: "/services/approvisionnement", label: "Approvisionnement industriel", hint: "Pièces, roulements, moteurs" },
+      { href: "/services/raw-material-supply", label: "Matières premières", hint: "Sourcing local & import" },
+      { href: "/services/supplier-networking", label: "Réseau fournisseurs", hint: "Mise en relation ciblée" },
+      { href: "/services/professional-training", label: "Formation professionnelle", hint: "Vente, management, stock" },
+      { href: "/services/conseil-informatique", label: "Conseil informatique", hint: "Data, UI/UX, microservices" },
+    ],
+  },
+  {
+    label: "Produits",
+    kicker: "Notre catalogue",
+    children: [
+      { href: "/products/construction-materials", label: "Matériaux de construction" },
+      { href: "/products/industrial-pipes", label: "Tuyaux industriels" },
+      { href: "/products/specialized-equipment", label: "Équipements spécialisés" },
+    ],
+  },
+  {
+    label: "Formation",
+    kicker: "Trois niveaux",
+    children: [
+      { href: "/training/basic", label: "Formation de base" },
+      { href: "/training/advanced", label: "Formation avancée" },
+      { href: "/training/specialized", label: "Formation spécialisée" },
+    ],
+  },
+  {
+    label: "Tarifs",
+    kicker: "Par taille d'entreprise",
+    children: [
+      { href: "/pricing/small-business", label: "Petites entreprises" },
+      { href: "/pricing/medium-business", label: "Entreprises moyennes" },
+      { href: "/pricing/large-business", label: "Grandes entreprises" },
+    ],
+  },
+  {
+    label: "Entreprise",
+    kicker: "À propos de MA-ERI",
+    children: [
+      { href: "/about/history", label: "Notre histoire" },
+      { href: "/about/mission", label: "Notre mission" },
+      { href: "/about/team", label: "Notre équipe" },
+    ],
+  },
+  { label: "Contact", href: "/contact" },
+];
 
 export default function Navbar({ className }: { className?: string }) {
-  const [active, setActive] = useState<string | null>(null);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = isMobileOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMobileOpen]);
 
   return (
-    <div className={cn("fixed top-10 inset-x-0 max-w-2xl mx-auto z-50", className)}>
-      {/* Mobile Menu Button */}
-      <button
-        className="lg:hidden absolute right-4 top-2 z-50"
-        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+    <header
+      className={cn(
+        "fixed top-0 inset-x-0 z-50 border-b transition-colors duration-300",
+        scrolled
+          ? "bg-background/80 backdrop-blur-xl border-border"
+          : "bg-background/0 border-transparent",
+        className,
+      )}
+      onMouseLeave={() => setOpenMenu(null)}
+    >
+      <nav
+        className="container mx-auto px-6 lg:px-10 h-16 md:h-20 flex items-center justify-between"
+        aria-label="Navigation principale"
       >
-        {isMobileMenuOpen ? (
-          <X className="w-6 h-6" />
-        ) : (
-          <MenuIcon className="w-6 h-6" />
-        )}
-      </button>
-
-      {/* Desktop Menu */}
-      <div className="hidden lg:block">
-      <Menu setActive={setActive} >
-        <Link href="/" className="z-50 cursor-pointer">
-          <HomeIcon className="hover:border-b-2 hover:border-current transition-all duration-200"/>
+        <Link href="/" className="flex items-center gap-3 group">
+          <Image
+            src="/logo.png"
+            alt="MA-ERI Consulting"
+            width={32}
+            height={32}
+            className="rounded"
+            priority
+          />
+          <span className="font-display text-lg font-medium tracking-tight">
+            MA-ERI
+          </span>
         </Link>
-      
-        
-        {/* Services Section */}
-        <MenuItem setActive={setActive} active={active} item="Services" >
-          <div className="flex flex-col space-y-4 text-sm">
-            <HoveredLink href="/services/approvisionnement">Approvisionnement industriel</HoveredLink>
-            <HoveredLink href="/services/professional-training">Formation professionnelle</HoveredLink>
-            <HoveredLink href="/services/conseil-informatique">
-              Conseil informatique et Digital
-            </HoveredLink>
-            <HoveredLink href="/services/raw-material-supply">Approvisionnement matières premières</HoveredLink>
-            <HoveredLink href="/services/supplier-networking">Réseau de fournisseurs</HoveredLink>
-          </div>
-        </MenuItem>
-        
-        {/* Products Section */}
-        <Link href="/services/approvisionnement">Produits</Link>
 
-        <MenuItem setActive={setActive} active={active} item="Formation">
-          <div className="flex flex-col space-y-4 text-sm">
-            <HoveredLink href="/training/basic">Formation de base</HoveredLink>
-            <HoveredLink href="/training/advanced">Formation avancée</HoveredLink>
-            <HoveredLink href="/training/specialized">Formation spécialisée</HoveredLink>
-          </div>
-        </MenuItem>
+        {/* Desktop menu */}
+        <ul className="hidden lg:flex items-center gap-1 text-sm">
+          {NAV.map((item) => {
+            const isOpen = openMenu === item.label;
+            if (item.children) {
+              return (
+                <li
+                  key={item.label}
+                  className="relative"
+                  onMouseEnter={() => setOpenMenu(item.label)}
+                  onFocus={() => setOpenMenu(item.label)}
+                >
+                  <button
+                    type="button"
+                    className={cn(
+                      "px-4 py-2 rounded-full text-foreground/80 hover:text-foreground transition-colors",
+                      isOpen && "text-foreground",
+                    )}
+                    aria-expanded={isOpen}
+                    aria-haspopup="true"
+                  >
+                    {item.label}
+                  </button>
+                  {isOpen && (
+                    <div
+                      className="absolute left-1/2 -translate-x-1/2 top-full pt-3 w-[min(38rem,92vw)]"
+                    >
+                      <div className="border border-border bg-background/95 backdrop-blur-xl shadow-xl p-6 rounded-md animate-fade-in">
+                        {item.kicker && (
+                          <p className="kicker kicker-brand mb-5">{item.kicker}</p>
+                        )}
+                        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1">
+                          {item.children.map((c) => (
+                            <li key={c.href}>
+                              <Link
+                                href={c.href}
+                                className="group flex flex-col gap-0.5 rounded-md px-3 py-3 hover:bg-secondary/60 transition-colors"
+                                onClick={() => setOpenMenu(null)}
+                              >
+                                <span className="flex items-center justify-between gap-3 font-medium">
+                                  {c.label}
+                                  <ArrowUpRight className="h-3.5 w-3.5 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+                                </span>
+                                {c.hint && (
+                                  <span className="text-xs text-muted-foreground">
+                                    {c.hint}
+                                  </span>
+                                )}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  )}
+                </li>
+              );
+            }
+            return (
+              <li key={item.label}>
+                <Link
+                  href={item.href!}
+                  className="px-4 py-2 rounded-full text-foreground/80 hover:text-foreground transition-colors"
+                >
+                  {item.label}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
 
-        {/* About Us Section */}
-        <MenuItem setActive={setActive} active={active} item="À propos">
-          <div className="flex flex-col space-y-4 text-sm">
-            <HoveredLink href="/about/histoire">Notre histoire</HoveredLink>
-            <HoveredLink href="/about/equipe">Notre équipe</HoveredLink>
-            <HoveredLink href="/about/mission">Notre mission</HoveredLink>
-            <HoveredLink href="/about/partenaire-confiance">Partenaire de confiance</HoveredLink>
-          </div>
-        </MenuItem>
+        <div className="hidden lg:flex items-center gap-3">
+          <ModeToggle />
+          <Link
+            href="/contact"
+            className="group inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-transform duration-300 hover:scale-[1.03]"
+            style={{ backgroundColor: "var(--ink)", color: "var(--paper)" }}
+          >
+            Devis
+            <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+          </Link>
+        </div>
 
-        {/* Contact Section */}
-        <Link href="/contact">Contact</Link>
+        <button
+          type="button"
+          className="lg:hidden inline-flex items-center justify-center h-10 w-10 rounded-full border border-border"
+          aria-label={isMobileOpen ? "Fermer le menu" : "Ouvrir le menu"}
+          aria-expanded={isMobileOpen}
+          onClick={() => setIsMobileOpen((o) => !o)}
+        >
+          {isMobileOpen ? <X className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
+        </button>
+      </nav>
 
-
-        <br />
-
-        <ModeToggle />
-      </Menu>
-      </div>
-
-      {/* Mobile Menu */}
-      {isMobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 bg-background/95 backdrop-blur-sm">
-          <div className="flex flex-col items-center justify-center h-full space-y-6 text-lg overflow-y-auto py-8">
-            <Link href="/" className="cursor-pointer">
-              <HomeIcon className="w-6 h-6" />
-            </Link>
-            
-            <div className="flex flex-col items-center space-y-4">
-              <span className="font-semibold">Services</span>
-              <Link href="/services/approvisionnement" className="text-sm">Approvisionnement</Link>
-              <Link href="/services/professional-training" className="text-sm">Formation</Link>
-              <Link href="/services/conseil-informatique" className="text-sm">Conseil IT</Link>
-              <Link href="/services/raw-material-supply" className="text-sm">Matières premières</Link>
-              <Link href="/services/supplier-networking" className="text-sm">Réseau fournisseurs</Link>
+      {/* Mobile sheet */}
+      {isMobileOpen && (
+        <div className="lg:hidden fixed inset-0 top-16 bg-background overflow-y-auto animate-fade-in">
+          <div className="container mx-auto px-6 py-8 flex flex-col gap-8">
+            {NAV.map((item) => (
+              <section key={item.label} className="flex flex-col gap-4">
+                <p className="kicker kicker-brand">{item.label}</p>
+                {item.children ? (
+                  <ul className="flex flex-col divide-y divide-border border-y border-border">
+                    {item.children.map((c) => (
+                      <li key={c.href}>
+                        <Link
+                          href={c.href}
+                          onClick={() => setIsMobileOpen(false)}
+                          className="flex items-center justify-between py-4 text-lg font-medium"
+                        >
+                          {c.label}
+                          <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <Link
+                    href={item.href!}
+                    onClick={() => setIsMobileOpen(false)}
+                    className="flex items-center justify-between py-4 text-lg font-medium border-y border-border"
+                  >
+                    Aller à {item.label}
+                    <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+                  </Link>
+                )}
+              </section>
+            ))}
+            <div className="flex items-center justify-between pt-4 border-t border-border">
+              <ModeToggle />
+              <Link
+                href="/contact"
+                onClick={() => setIsMobileOpen(false)}
+                className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-medium"
+                style={{ backgroundColor: "var(--ink)", color: "var(--paper)" }}
+              >
+                Demander un devis
+                <ArrowUpRight className="h-4 w-4" />
+              </Link>
             </div>
-
-            <div className="flex flex-col items-center space-y-4">
-              <span className="font-semibold">Produits</span>
-              <Link href="/products/construction-materials" className="text-sm">Matériaux construction</Link>
-              <Link href="/products/industrial-pipes" className="text-sm">Tuyaux industriels</Link>
-              <Link href="/products/specialized-equipment" className="text-sm">Équipements spécialisés</Link>
-            </div>
-
-            <div className="flex flex-col items-center space-y-4">
-              <span className="font-semibold">Tarifs</span>
-              <Link href="/pricing/small-business" className="text-sm">Petites entreprises</Link>
-              <Link href="/pricing/medium-business" className="text-sm">Moyennes entreprises</Link>
-              <Link href="/pricing/large-business" className="text-sm">Grandes entreprises</Link>
-            </div>
-
-            <div className="flex flex-col items-center space-y-4">
-              <span className="font-semibold">Formation</span>
-              <Link href="/training/basic" className="text-sm">Formation de base</Link>
-              <Link href="/training/advanced" className="text-sm">Formation avancée</Link>
-              <Link href="/training/specialized" className="text-sm">Formation spécialisée</Link>
-            </div>
-
-            <div className="flex flex-col items-center space-y-4">
-              <span className="font-semibold">Contact</span>
-              <Link href="/contact/general" className="text-sm">Contact général</Link>
-              <Link href="/contact/support" className="text-sm">Support technique</Link>
-              <Link href="/contact/sales" className="text-sm">Service commercial</Link>
-            </div>
-            
-            <ModeToggle />
           </div>
         </div>
       )}
-    </div>
+    </header>
   );
 }

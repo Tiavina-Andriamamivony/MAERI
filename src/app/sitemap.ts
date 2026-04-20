@@ -1,34 +1,36 @@
-import { MetadataRoute } from 'next'
- 
+import { MetadataRoute } from "next";
+
+const BASE = "https://maeri.vercel.app";
+
+const routes = [
+  "",
+  "/services",
+  "/services/approvisionnement",
+  "/services/raw-material-supply",
+  "/services/supplier-networking",
+  "/services/professional-training",
+  "/services/conseil-informatique",
+  "/products/construction-materials",
+  "/products/industrial-pipes",
+  "/products/specialized-equipment",
+  "/training/basic",
+  "/training/advanced",
+  "/training/specialized",
+  "/pricing/small-business",
+  "/pricing/medium-business",
+  "/pricing/large-business",
+  "/about/history",
+  "/about/mission",
+  "/about/team",
+  "/contact",
+];
+
 export default function sitemap(): MetadataRoute.Sitemap {
-  return [
-    {
-      url: 'https://maeri.vercel.app',
-      lastModified: new Date(),
-    },
-    {
-      url: 'https://maeri.vercel.app/services',
-      lastModified: new Date(),
-    },
-    {
-      url: 'https://maeri.vercel.app/products',
-      lastModified: new Date(),
-    },
-    {
-      url: 'https://maeri.vercel.app/pricing',
-      lastModified: new Date(),
-    },
-    {
-      url: 'https://maeri.vercel.app/training',
-      lastModified: new Date(),
-    },
-    {
-      url: 'https://maeri.vercel.app/about',
-      lastModified: new Date(),
-    },
-    {
-      url: 'https://maeri.vercel.app/contact',
-      lastModified: new Date(),
-    },
-  ]
+  const lastModified = new Date();
+  return routes.map((p) => ({
+    url: `${BASE}${p}`,
+    lastModified,
+    changeFrequency: "monthly" as const,
+    priority: p === "" ? 1 : 0.7,
+  }));
 }

@@ -1,0 +1,10 @@
+export { Kicker } from "./kicker";
+export { SectionHeading } from "./section-heading";
+export { PageHero } from "./page-hero";
+export { FeatureGrid, type Feature } from "./feature-grid";
+export { StatBand, type StatItem } from "./stat";
+export { CTABlock } from "./cta-block";
+export { PricingCard, type PricingTier } from "./pricing-card";
+export { Footer } from "./footer";
+export { Checklist } from "./checklist";
+export { Steps, type Step } from "./steps";
