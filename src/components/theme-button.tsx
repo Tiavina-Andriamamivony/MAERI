@@ -1,37 +1,42 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Moon, Sun } from "lucide-react"
-import { useEffect, useState } from "react";
+import * as React from "react";
+import { Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
 
 export function ModeToggle() {
-  const [theme, setTheme] = useState("light");
-  const [isRotating, setIsRotating] = useState(false);
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = React.useState(false);
+  const [isRotating, setIsRotating] = React.useState(false);
 
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") || "light";
-    setTheme(savedTheme);
-    document.documentElement.className = savedTheme;
+  React.useEffect(() => {
+    setMounted(true);
   }, []);
 
-  const toggleTheme = () => {
+  const isDark = resolvedTheme === "dark";
+
+  const toggle = () => {
     setIsRotating(true);
-    const newTheme = theme === "light" ? "dark" : "light";
-    setTheme(newTheme);
-    localStorage.setItem("theme", newTheme);
-    document.documentElement.className = newTheme;
-    
+    setTheme(isDark ? "light" : "dark");
     setTimeout(() => setIsRotating(false), 500);
   };
 
   return (
-    <button 
+    <button
+      type="button"
+      onClick={toggle}
+      aria-label={isDark ? "Activer le mode clair" : "Activer le mode sombre"}
       className={`cursor-pointer transition-transform duration-500 ${
-        isRotating ? 'rotate-[360deg]' : ''
-      }`} 
-      onClick={toggleTheme}
+        isRotating ? "rotate-[360deg]" : ""
+      }`}
     >
-      {theme === "light" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+      {!mounted ? (
+        <Sun className="h-5 w-5 opacity-0" aria-hidden />
+      ) : isDark ? (
+        <Sun className="h-5 w-5" />
+      ) : (
+        <Moon className="h-5 w-5" />
+      )}
     </button>
   );
 }
