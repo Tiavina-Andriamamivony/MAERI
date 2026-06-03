@@ -24,7 +24,7 @@ interface EmailTemplateProps {
     message: string;
 }
 
-const baseUrl = 'https://ma-eri.vercel.app';
+const baseUrl = 'https://maeri.vercel.app';
 
 export const EmailTemplate = ({
     name,
