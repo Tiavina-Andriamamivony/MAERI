@@ -1,99 +1,68 @@
+# MA-ERI Consulting — Site vitrine
 
-# Website for [MAERI CONSULTING]
+Site officiel de **MA-ERI Consulting**, startup malgache basée à Toamasina.
+Vitrine publique des quatre pôles : approvisionnement industriel, matières
+premières, formation professionnelle et conseil informatique.
 
-Welcome to the official website of **[MAERI CONSULTING]**, your trusted partner in supplying raw materials, pipes, and industrial equipment, as well as offering professional training tailored to the needs of small and medium enterprises (SMEs).
+Production : <https://maeri.vercel.app>
 
-## Table of Contents
+## Stack
 
-- [Introduction](#introduction)
-- [Installation](#installation)
-- [Technologies Used](#technologies-used)
-- [Project Structure](#project-structure)
-- [Contributing](#contributing)
-- [License](#license)
+- **Next.js 15** App Router · React 19 · TypeScript strict
+- **Tailwind CSS v4** (sans `tailwind.config.*` — tokens dans `src/app/globals.css`)
+- **shadcn/ui** (style `new-york`, base `stone`, RSC activé)
+- **next-themes** (mode clair / sombre)
+- **next-international** (en/fr, en cours)
+- **react-hook-form** + **zod** pour les formulaires
+- **Resend** + **@react-email/components** pour l'email transactionnel
+- **framer-motion / motion** pour les animations
+- **pnpm** comme gestionnaire de paquets
 
-## Introduction
+## Démarrage
 
-This website was created for **[MAERI CONSULTING]**, a business specializing in the sale of raw materials, pipes, and various other equipment for SMEs. Additionally, the company offers professional training to help businesses improve their skills and expertise.
+Prérequis : Node ≥ 18, **pnpm** installé.
 
-## Installation
-
-### Prerequisites
-
-- Node.js (version 14 or above)
-- npm (or yarn)
-
-### Installing the Project
-
-1. Clone this repository to your local machine:
-    ```bash
-    git clone https://github.com/your-username/repository-name.git
-    ```
-
-2. Navigate to the project directory:
-    ```bash
-    cd repository-name
-    ```
-
-3. Install the dependencies:
-    ```bash
-    npm install
-    ```
-
-4. Start the development server:
-    ```bash
-    npm run dev
-    ```
-
-5. Open your browser and access the application at [http://localhost:3000](http://localhost:3000).
-
-## Technologies Used
-
-- **Next.js**: A React framework for building static and dynamic websites.
-- **React**: JavaScript library for building the user interface.
-- **CSS/SCSS**: Used for layout and design of the website.
-- **Node.js**: JavaScript runtime for the server-side.
-- **Nodemailer**: Used for sending emails from the contact form.
-
-## Project Structure
-
-The project is organized as follows:
-
-```
-/pages
-  /index.js         # Homepage
-  /about.js         # About Us page
-  /contact.js       # Contact page
-  /services.js      # Services page
-  /products.js      # Products page
-  /trainings.js     # Trainings page
-
-/components
-  /Navbar.js        # Navigation bar component
-  /Footer.js        # Footer component
-  /HeroSection.js   # Hero section component
-  /ServiceCard.js   # Card component for each service
-  /ProductCard.js   # Card component for each product
-
-/public
-  /images           # Images used across the site
-
-/styles
-  /globals.css      # Global styles
-  /home.module.css  # Styles specific to the homepage
+```bash
+pnpm install
+pnpm dev          # http://localhost:3000 (Turbopack)
+pnpm build        # build de production
+pnpm start        # exécuter le build
+pnpm lint         # ESLint flat config (next/core-web-vitals + next/typescript)
 ```
 
-## Contributing
+Il n'y a pas de runner de tests configuré pour l'instant.
 
-If you'd like to contribute to this project, please follow these steps:
+### Variables d'environnement
 
-1. Fork this repository
-2. Create a branch for your feature or bugfix (`git checkout -b feature/new-feature`)
-3. Make your changes
-4. Commit your changes (`git commit -am 'Add a new feature'`)
-5. Push your changes (`git push origin feature/new-feature`)
-6. Open a pull request
+```bash
+# .env (non versionné)
+RESEND_API_KEY=...        # requis pour /api/send
+```
 
-## License
+## Structure rapide
 
-This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
+```
+src/
+  app/                  # App Router — pages marketing + /api/send
+  components/
+    anotherNav.tsx      # navigation principale (montée dans layout)
+    brand/              # vocabulaire éditorial (PageHero, Kicker, FeatureGrid…)
+    ui/                 # primitives shadcn
+    magicui/            # composants animés (grid, marquee, scroll-progress…)
+    email-template.tsx  # template React Email
+locales/                # dictionnaires next-international (en/fr)
+public/                 # logos + assets statiques
+```
+
+## Pour les nouveaux développeurs
+
+Lire **[onboarding.md](./onboarding.md)** avant la première contribution :
+conventions de code, vocabulaire de composants `brand/*`, tokens de couleur,
+workflow de commits, FAQ.
+
+Le fichier **[CLAUDE.md](./CLAUDE.md)** documente la même chose à destination
+des assistants IA — il reste utile comme référence rapide.
+
+## Licence
+
+MIT — voir `LICENSE.txt`.
