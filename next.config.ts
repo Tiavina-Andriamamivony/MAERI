@@ -1,12 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-};
-module.exports = {
   images: {
-    domains: ['assets.aceternity.com','via.placeholder.com','i.pinimg.com','images.unsplash.com'],
+    remotePatterns: [
+      { protocol: "https", hostname: "assets.aceternity.com" },
+      { protocol: "https", hostname: "via.placeholder.com" },
+      { protocol: "https", hostname: "i.pinimg.com" },
+      { protocol: "https", hostname: "images.unsplash.com" },
+    ],
   },
-}
+};
 
 export default nextConfig;
