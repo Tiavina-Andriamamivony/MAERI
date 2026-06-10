@@ -89,7 +89,7 @@ export function BrandSeal() {
 
             {/* the mark itself */}
             <Image
-              src="/logo.png"
+              src="/logo_new.png"
               alt="MA-ERI Consulting"
               width={640}
               height={640}

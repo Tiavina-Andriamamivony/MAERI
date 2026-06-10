@@ -65,7 +65,7 @@ export function Footer() {
           <div className="col-span-2 md:col-span-1 flex flex-col gap-4">
             <Link href="/" className="inline-flex items-center gap-3">
               <Image
-                src="/logo.png"
+                src="/logo_new.png"
                 alt="MA-ERI Consulting"
                 width={56}
                 height={56}

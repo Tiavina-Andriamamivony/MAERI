@@ -129,7 +129,7 @@ export default function Navbar({ className }: { className?: string }) {
             onClick={() => setIsMobileOpen(false)}
           >
             <Image
-              src="/logo.png"
+              src="/logo_new.png"
               alt="MA-ERI Consulting"
               width={56}
               height={60}
