@@ -52,7 +52,7 @@ export const EmailTemplate = ({
             <Container style={container}>
                 <Section style={logoSection}>
                     <Img
-                        src={`${baseUrl}/logo_bg.png`}
+                        src={`${baseUrl}/logo_new.png`}
                         width="150"
                         height="auto"
                         alt="MA-ERI Consulting"

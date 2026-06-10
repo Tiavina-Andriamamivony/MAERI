@@ -90,7 +90,7 @@ export function HomeHero() {
             <div className="relative h-full flex flex-col justify-between border-l border-border pl-6 lg:pl-8 min-h-[320px]">
               <div className="flex flex-col gap-4">
                 <Image
-                  src="/logo.png"
+                  src="/logo_new.png"
                   alt="MA-ERI Consulting"
                   width={240}
                   height={246}
