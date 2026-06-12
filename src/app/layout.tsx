@@ -1,5 +1,7 @@
 import { Geist, JetBrains_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
+import { ClerkProvider} from '@clerk/nextjs'
+import { Geist, Geist_Mono } from 'next/font/google'
 import { ThemeProvider } from "@/components/theme-provider";
 import AnotherNav from "@/components/anotherNav";
 import { Footer } from "@/components/brand/footer";
@@ -49,6 +51,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" suppressHydrationWarning>
+      <ClerkProvider>
       <body
         className={`${geistSans.variable} ${jetbrainsMono.variable} ${fraunces.variable} antialiased bg-background text-foreground`}
       >
@@ -63,6 +66,7 @@ export default function RootLayout({
           <Footer />
         </ThemeProvider>
       </body>
+      </ClerkProvider>
     </html>
   );
 }
