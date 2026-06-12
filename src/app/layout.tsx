@@ -1,7 +1,6 @@
 import { Geist, JetBrains_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider} from '@clerk/nextjs'
-import { Geist, Geist_Mono } from 'next/font/google'
 import { ThemeProvider } from "@/components/theme-provider";
 import AnotherNav from "@/components/anotherNav";
 import { Footer } from "@/components/brand/footer";
