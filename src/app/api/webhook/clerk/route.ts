@@ -34,7 +34,7 @@ export async function POST(req: Request) {
       "svix-signature": svix_signature,
     }) as WebhookEvent;
   } catch (err) {
-    return new Response('Erreur : Signature invalide', { status: 400 });
+    return new Response('Erreur : Signature invalide', err instanceof Error ? { status: 400, statusText: err.message } : { status: 400 });
   }
 
   const { id } = evt.data;
