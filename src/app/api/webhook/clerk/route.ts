@@ -37,7 +37,6 @@ export async function POST(req: Request) {
     return new Response('Erreur : Signature invalide', { status: 400 });
   }
 
-  // Traitement des données [6]
   const { id } = evt.data;
   const eventType = evt.type;
 
