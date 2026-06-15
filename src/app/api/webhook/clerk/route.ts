@@ -3,11 +3,14 @@ import { headers } from 'next/headers';
 import { WebhookEvent } from '@clerk/nextjs/server';
 import prisma  from '@/lib/prisma'; // Votre instance Prisma Client [8, 9]
 
+const LOG = '[clerk-webhook]';
+
 export async function POST(req: Request) {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
 
   if (!WEBHOOK_SECRET) {
-    throw new Error('Veuillez ajouter CLERK_WEBHOOK_SECRET aux variables d\'environnement');
+    console.error(`${LOG} CLERK_WEBHOOK_SECRET manquant dans les variables d'environnement`);
+    return new Response('Configuration serveur invalide', { status: 500 });
   }
 
   // Récupérer les headers de signature Svix [10]
@@ -17,6 +20,7 @@ export async function POST(req: Request) {
   const svix_signature = headerPayload.get("svix-signature");
 
   if (!svix_id || !svix_timestamp || !svix_signature) {
+    console.error(`${LOG} headers svix manquants`, { svix_id, svix_timestamp, svix_signature });
     return new Response('Erreur : Headers Svix manquants', { status: 400 });
   }
 
@@ -34,27 +38,38 @@ export async function POST(req: Request) {
       "svix-signature": svix_signature,
     }) as WebhookEvent;
   } catch (err) {
+    console.error(`${LOG} signature invalide`, err instanceof Error ? err.message : err);
     return new Response('Erreur : Signature invalide', err instanceof Error ? { status: 400, statusText: err.message } : { status: 400 });
   }
 
   const { id } = evt.data;
   const eventType = evt.type;
 
+  console.log(`${LOG} reçu`, { eventType, clerkId: id });
+
   if (eventType === 'user.created' || eventType === 'user.updated') {
     const { email_addresses, first_name, last_name } = evt.data;
     const email = email_addresses[0]?.email_address;
     const name = `${first_name} ${last_name}`;
 
-    // Utilisation de upsert pour créer ou mettre à jour l'utilisateur [11, 12]
-    await prisma.user.upsert({
-      where: { clerkId: id },
-      update: { email, name },
-      create: {
-        clerkId: id as string,
-        email,
-        name,
-      },
-    });
+    try {
+      // Utilisation de upsert pour créer ou mettre à jour l'utilisateur [11, 12]
+      const user = await prisma.user.upsert({
+        where: { clerkId: id },
+        update: { email, name },
+        create: {
+          clerkId: id as string,
+          email,
+          name,
+        },
+      });
+      console.log(`${LOG} utilisateur synchronisé`, { eventType, dbId: user.id, clerkId: id, email });
+    } catch (err) {
+      console.error(`${LOG} échec sync prisma`, { clerkId: id, error: err instanceof Error ? err.message : err });
+      return new Response('Erreur : synchronisation base de données', { status: 500 });
+    }
+  } else {
+    console.log(`${LOG} event ignoré`, { eventType });
   }
 
   return new Response('Webhook reçu', { status: 200 });
