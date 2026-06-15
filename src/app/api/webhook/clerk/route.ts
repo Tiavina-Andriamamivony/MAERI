@@ -43,7 +43,7 @@ export async function POST(req: Request) {
 
   if (eventType === 'user.created' || eventType === 'user.updated') {
     const { email_addresses, first_name, last_name } = evt.data;
-    const email = email_addresses.email_address;
+    const email = email_addresses[0]?.email_address;
     const name = `${first_name} ${last_name}`;
 
     // Utilisation de upsert pour créer ou mettre à jour l'utilisateur [11, 12]
