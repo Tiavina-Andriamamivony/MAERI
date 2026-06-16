@@ -1,0 +1,5 @@
+-- CreateEnum
+CREATE TYPE "Product_type" AS ENUM ('CONSTRUCTION_MATERIALS', 'INDUSTRIAL_PIPES', 'SPECIALIZED_EQUIPMENT');
+
+-- AlterTable
+ALTER TABLE "Product" ADD COLUMN     "type" "Product_type" NOT NULL;

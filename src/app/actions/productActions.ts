@@ -1,7 +1,7 @@
 'use server'
 
 import type { z } from 'zod'
-
+import { auth } from '@clerk/nextjs/server'
 import prisma from '@/lib/prisma'
 import { uploadImage, deleteImage } from '@/lib/blob'
 import { ActionResult, ok, fail } from '@/lib/action-result'
@@ -13,38 +13,42 @@ import {
 import type { Product } from '../generated/prisma/client'
 
 export async function createProduct(formData: FormData): Promise<ActionResult<Product>> {
+  const user = await requireUser()
+  if (!user.success) return user
+
   const input = createProductSchema.safeParse({
     name: formData.get('name'),
     description: formData.get('description') ?? undefined,
-    email: formData.get('email'),
+    type: formData.get('type'),
     image: pickImage(formData),
   })
   if (!input.success) return fail(firstError(input.error))
 
-  const { name, description, email, image } = input.data
-
-  const user = await prisma.user.findFirst({ where: { email } })
-  if (!user) return fail('Utilisateur introuvable')
+  const { name, description, type, image } = input.data
 
   const imageUrl = image ? await uploadImage(image) : undefined
 
   const product = await prisma.product.create({
-    data: { name, description, imageUrl, userId: user.id },
+    data: { name, description, type, imageUrl, userId: user.data.id },
   })
 
   return ok(product)
 }
 
 export async function updateProduct(formData: FormData): Promise<ActionResult<Product>> {
+  const user = await requireUser()
+  if (!user.success) return user
+
   const input = updateProductSchema.safeParse({
     id: formData.get('id'),
     name: formData.get('name'),
     description: formData.get('description') ?? undefined,
+    type: formData.get('type'),
     image: pickImage(formData),
   })
   if (!input.success) return fail(firstError(input.error))
 
-  const { id, name, description, image } = input.data
+  const { id, name, description, type, image } = input.data
 
   const existing = await prisma.product.findUnique({ where: { id } })
   if (!existing) return fail('Produit introuvable')
@@ -57,13 +61,16 @@ export async function updateProduct(formData: FormData): Promise<ActionResult<Pr
 
   const product = await prisma.product.update({
     where: { id },
-    data: { name, description, imageUrl },
+    data: { name, description, type, imageUrl },
   })
 
   return ok(product)
 }
 
 export async function deleteProduct(formData: FormData): Promise<ActionResult> {
+  const user = await requireUser()
+  if (!user.success) return user
+
   const input = productIdSchema.safeParse(formData.get('id'))
   if (!input.success) return fail(firstError(input.error))
 
@@ -89,6 +96,22 @@ export async function getProduct(id: string): Promise<ActionResult<Product>> {
 export async function getProducts(): Promise<ActionResult<Product[]>> {
   const products = await prisma.product.findMany({ orderBy: { name: 'asc' } })
   return ok(products)
+}
+
+/**
+ * Garde d'authentification pour les mutations produit. Résout l'utilisateur
+ * Clerk courant vers son enregistrement Prisma (lié par `clerkId`). Comme
+ * l'inscription est désactivée côté Clerk, tout utilisateur connecté est de
+ * fait autorisé.
+ */
+async function requireUser(): Promise<ActionResult<{ id: string }>> {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) return fail('Utilisateur non authentifié')
+
+  const user = await prisma.user.findUnique({ where: { clerkId } })
+  if (!user) return fail('Utilisateur introuvable')
+
+  return ok({ id: user.id })
 }
 
 /** Champ image vide dans FormData (File de taille 0) => undefined. */
