@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { Product_type } from '@/app/generated/prisma/enums'
+
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024
 const ACCEPTED_IMAGE_TYPES = [
   'image/jpeg',
@@ -20,12 +22,11 @@ const optionalImage = z
 export const createProductSchema = z.object({
   name: z.string().trim().min(1, 'Le nom est requis').max(120, 'Nom trop long'),
   description: z.string().trim().max(2000, 'Description trop longue').optional(),
-  email: z.string().trim().email('Email invalide'),
+  type: z.nativeEnum(Product_type, { errorMap: () => ({ message: 'Type de produit invalide' }) }),
   image: optionalImage,
 })
 
 export const updateProductSchema = createProductSchema
-  .omit({ email: true })
   .extend({ id: z.string().uuid('Identifiant produit invalide') })
 
 export const productIdSchema = z.string().uuid('Identifiant produit invalide')

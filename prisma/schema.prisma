@@ -28,4 +28,11 @@ model Product {
   userId String
   imageUrl String?
   user User @relation(fields: [userId], references: [id])
+  type Product_type
+}
+
+enum Product_type {
+  CONSTRUCTION_MATERIALS
+  INDUSTRIAL_PIPES
+  SPECIALIZED_EQUIPMENT
 }
