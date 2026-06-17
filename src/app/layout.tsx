@@ -2,8 +2,6 @@ import { Geist, JetBrains_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider} from '@clerk/nextjs'
 import { ThemeProvider } from "@/components/theme-provider";
-import AnotherNav from "@/components/anotherNav";
-import { Footer } from "@/components/brand/footer";
 
 const geistSans = Geist({
   variable: "--font-sans",
@@ -60,9 +58,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <AnotherNav />
-          <main className="pt-20 md:pt-24">{children}</main>
-          <Footer />
+          {children}
         </ThemeProvider>
       </body>
       </ClerkProvider>
