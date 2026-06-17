@@ -1,6 +1,7 @@
 import { auth } from '@clerk/nextjs/server'
 
 import prisma from '@/lib/prisma'
+import { ProductCards } from '@/components/admin/product-cards'
 
 export default async function AdminPage() {
   // Le middleware protège déjà `/admin`, mais on revérifie côté serveur pour
@@ -13,13 +14,8 @@ export default async function AdminPage() {
   if (!user) return redirectToSignIn()
 
   return (
-     <div className="flex flex-1 flex-col gap-4 p-4">
-      <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-        <div className="aspect-video rounded-xl bg-muted/50" />
-        <div className="aspect-video rounded-xl bg-muted/50" />
-        <div className="aspect-video rounded-xl bg-muted/50" />
-      </div>
-      <div className="min-h-screen flex-1 rounded-xl bg-muted/50 md:min-h-min" />
+    <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
+      <ProductCards />
     </div>
   )
 }

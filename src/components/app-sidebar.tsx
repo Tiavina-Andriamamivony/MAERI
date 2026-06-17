@@ -14,7 +14,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import Image from "next/image"
-import { TerminalSquareIcon } from "lucide-react"
+import { PackageIcon } from "lucide-react"
 
 const data = {
   user: {
@@ -27,7 +27,7 @@ const data = {
       title: "Produits",
       url: "#",
       icon: (
-        <TerminalSquareIcon
+        <PackageIcon
         />
       ),
       isActive: true,
