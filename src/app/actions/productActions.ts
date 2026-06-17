@@ -10,7 +10,7 @@ import {
   updateProductSchema,
   productIdSchema,
 } from '@/lib/validations/product'
-import type { Product } from '../generated/prisma/client'
+import type { Product, Product_type } from '../generated/prisma/client'
 
 export async function createProduct(formData: FormData): Promise<ActionResult<Product>> {
   const user = await requireUser()
@@ -95,6 +95,11 @@ export async function getProduct(id: string): Promise<ActionResult<Product>> {
 
 export async function getProducts(): Promise<ActionResult<Product[]>> {
   const products = await prisma.product.findMany({ orderBy: { name: 'asc' } })
+  return ok(products)
+}
+
+export async function getProductsByProductType(productType: Product_type ): Promise<ActionResult<Product[]>>{
+  const products = await prisma.product.findMany({where: {type: productType}, orderBy: { name: 'asc' } })
   return ok(products)
 }
 
