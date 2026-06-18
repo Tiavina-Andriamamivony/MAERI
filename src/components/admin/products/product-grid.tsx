@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
-import { PlusIcon } from "lucide-react"
+import { useMemo, useState } from "react"
+import { useSearchParams } from "next/navigation"
+import { PackageOpenIcon, PlusIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import type { Product } from "@/app/generated/prisma/client"
@@ -10,6 +11,7 @@ import {
   deleteProduct,
   updateProduct,
 } from "@/app/actions/productActions"
+import { getProductTypeBySlug } from "@/lib/product-types"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 
@@ -25,6 +27,19 @@ export function ProductGrid({ initialProducts }: { initialProducts: Product[] })
   const [products, setProducts] = useState<Product[]>(initialProducts)
   const [editing, setEditing] = useState<Product | null>(null)
   const [creating, setCreating] = useState(false)
+
+  // Filtre actif piloté par la sidebar via `?type=<slug>`. Slug inconnu ou
+  // absent => on affiche tous les produits.
+  const searchParams = useSearchParams()
+  const activeType = getProductTypeBySlug(searchParams.get("type") ?? "")
+
+  const visibleProducts = useMemo(
+    () =>
+      activeType
+        ? products.filter((p) => p.type === activeType.type)
+        : products,
+    [products, activeType],
+  )
 
   function handleCreated(created: Product) {
     setProducts((prev) => [...prev, created])
@@ -48,9 +63,13 @@ export function ProductGrid({ initialProducts }: { initialProducts: Product[] })
     <>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">Produits</h1>
+          <h1 className="text-2xl font-semibold">
+            {activeType ? activeType.title : "Produits"}
+          </h1>
           <p className="text-muted-foreground text-sm">
-            Aperçu des produits, par type. Cliquez sur « Modifier » pour éditer.
+            {activeType
+              ? activeType.lede
+              : "Aperçu des produits, par type. Cliquez sur « Modifier » pour éditer."}
           </p>
         </div>
         <Button
@@ -62,11 +81,36 @@ export function ProductGrid({ initialProducts }: { initialProducts: Product[] })
         </Button>
       </div>
 
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {products.map((product) => (
-          <ProductCard key={product.id} product={product} onEdit={setEditing} />
-        ))}
-      </div>
+      {visibleProducts.length > 0 ? (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {visibleProducts.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              onEdit={setEditing}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border py-16 text-center">
+          <PackageOpenIcon className="text-muted-foreground size-8" />
+          <div className="space-y-1">
+            <p className="font-medium">
+              {activeType
+                ? `Aucun produit dans « ${activeType.label} » pour le moment`
+                : "Aucun produit pour le moment"}
+            </p>
+            <p className="text-muted-foreground mx-auto max-w-md text-sm">
+              Cette catégorie est encore vide. Ajoutez un premier produit pour
+              le voir apparaître ici.
+            </p>
+          </div>
+          <Button onClick={() => setCreating(true)}>
+            <PlusIcon />
+            Ajouter un produit
+          </Button>
+        </div>
+      )}
 
       {/* Dialog d'édition */}
       <Dialog

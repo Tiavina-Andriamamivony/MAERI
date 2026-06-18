@@ -1,5 +1,8 @@
 "use client"
 
+import Link from "next/link"
+import { usePathname, useSearchParams } from "next/navigation"
+
 import {
   Collapsible,
   CollapsibleContent,
@@ -32,6 +35,13 @@ export function NavMain({
     }[]
   }[]
 }) {
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  // URL courante (chemin + query) pour surligner le sous-lien actif.
+  const currentUrl = searchParams.toString()
+    ? `${pathname}?${searchParams.toString()}`
+    : pathname
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Platform</SidebarGroupLabel>
@@ -40,10 +50,10 @@ export function NavMain({
           <Collapsible key={item.title} asChild defaultOpen={item.isActive}>
             <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip={item.title}>
-                <a href={item.url}>
+                <Link href={item.url}>
                   {item.icon}
                   <span>{item.title}</span>
-                </a>
+                </Link>
               </SidebarMenuButton>
               {item.items?.length ? (
                 <>
@@ -58,10 +68,13 @@ export function NavMain({
                     <SidebarMenuSub>
                       {item.items?.map((subItem) => (
                         <SidebarMenuSubItem key={subItem.title}>
-                          <SidebarMenuSubButton asChild>
-                            <a href={subItem.url}>
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={subItem.url === currentUrl}
+                          >
+                            <Link href={subItem.url}>
                               <span>{subItem.title}</span>
-                            </a>
+                            </Link>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
                       ))}

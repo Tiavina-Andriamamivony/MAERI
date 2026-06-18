@@ -16,6 +16,8 @@ import {
 import Image from "next/image"
 import { PackageIcon } from "lucide-react"
 
+import { PRODUCT_TYPES } from "@/lib/product-types"
+
 const data = {
   user: {
     name: "shadcn",
@@ -25,29 +27,21 @@ const data = {
   navMain: [
     {
       title: "Produits",
-      url: "#",
-      icon: (
-        <PackageIcon
-        />
-      ),
+      // Sans `type`, la page admin affiche tous les produits.
+      url: "/admin",
+      icon: <PackageIcon />,
       isActive: true,
+      // Un sous-lien par type, dérivé de la source de vérité `PRODUCT_TYPES`
+      // pour garder les libellés alignés avec les pages produits publiques.
       items: [
-        {
-          title: "Matériau de construction",
-          url: "#",
-        },
-        {
-          title: "Equipements spécialisés",
-          url: "#",
-        },
-        {
-          title: "Tuyaux indusriels",
-          url: "#",
-        },
+        { title: "Tous les produits", url: "/admin" },
+        ...PRODUCT_TYPES.map((meta) => ({
+          title: meta.label,
+          url: `/admin?type=${meta.slug}`,
+        })),
       ],
-    }
+    },
   ],
-  
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
