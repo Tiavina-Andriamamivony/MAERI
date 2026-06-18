@@ -5,7 +5,11 @@ import { PlusIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import type { Product } from "@/app/generated/prisma/client"
-import { createProduct, updateProduct } from "@/app/actions/productActions"
+import {
+  createProduct,
+  deleteProduct,
+  updateProduct,
+} from "@/app/actions/productActions"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 
@@ -32,6 +36,12 @@ export function ProductGrid({ initialProducts }: { initialProducts: Product[] })
     setProducts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
     setEditing(null)
     toast.success("Produit mis à jour.")
+  }
+
+  function handleDeleted(deleted: Product) {
+    setProducts((prev) => prev.filter((p) => p.id !== deleted.id))
+    setEditing(null)
+    toast.success("Produit supprimé.")
   }
 
   return (
@@ -74,6 +84,8 @@ export function ProductGrid({ initialProducts }: { initialProducts: Product[] })
               action={updateProduct}
               onSuccess={handleUpdated}
               onCancel={() => setEditing(null)}
+              onDelete={deleteProduct}
+              onDeleted={handleDeleted}
             />
           )}
         </DialogContent>

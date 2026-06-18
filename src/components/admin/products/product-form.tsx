@@ -10,6 +10,17 @@ import type { Product } from "@/app/generated/prisma/client"
 import { Product_type } from "@/app/generated/prisma/enums"
 import type { ActionResult } from "@/lib/action-result"
 import { createProductSchema } from "@/lib/validations/product"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import {
   DialogDescription,
@@ -58,6 +69,8 @@ export function ProductForm({
   action,
   onSuccess,
   onCancel,
+  onDelete,
+  onDeleted,
 }: {
   title: string
   description: string
@@ -69,6 +82,13 @@ export function ProductForm({
   /** Appelé avec le produit persisté en cas de succès. */
   onSuccess: (product: Product) => void
   onCancel: () => void
+  /**
+   * Server action de suppression. Fournie uniquement en édition ; absente,
+   * le bouton « Supprimer » n'est pas rendu.
+   */
+  onDelete?: (formData: FormData) => Promise<ActionResult>
+  /** Appelé une fois le produit supprimé en base. */
+  onDeleted?: (product: Product) => void
 }) {
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(TEXT_FIELDS_SCHEMA),
@@ -83,6 +103,7 @@ export function ProductForm({
   const [previewUrl, setPreviewUrl] = useState<string | undefined>(
     product?.imageUrl ?? undefined,
   )
+  const [isDeleting, setIsDeleting] = useState(false)
 
   function handleImageChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
@@ -107,7 +128,22 @@ export function ProductForm({
     onSuccess(result.data)
   })
 
+  async function handleDelete() {
+    if (!product || !onDelete) return
+    setIsDeleting(true)
+    const formData = new FormData()
+    formData.set("id", product.id)
+    const result = await onDelete(formData)
+    setIsDeleting(false)
+    if (!result.success) {
+      toast.error(result.error)
+      return
+    }
+    onDeleted?.(product)
+  }
+
   const { isSubmitting } = form.formState
+  const canDelete = Boolean(product && onDelete)
 
   return (
     <Form {...form}>
@@ -120,6 +156,9 @@ export function ProductForm({
         <div className="grid gap-4 py-4">
           <FormItem>
             <FormLabel htmlFor="product-image">Image</FormLabel>
+            <p className="text-muted-foreground text-sm">
+              Format 16:9 recommandé (ex. 1280×720 px), 5 Mo maximum.
+            </p>
             {previewUrl && (
               <div
                 className="aspect-video w-full rounded-md bg-muted bg-contain bg-center bg-no-repeat"
@@ -193,15 +232,54 @@ export function ProductForm({
             type="button"
             variant="outline"
             onClick={onCancel}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isDeleting}
           >
             Annuler
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting || isDeleting}>
             {isSubmitting && <Loader2 className="animate-spin" />}
             {submitLabel}
           </Button>
         </DialogFooter>
+
+        {canDelete && (
+          <div className="mt-4 border-t border-border pt-4">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  className="w-full"
+                  disabled={isSubmitting || isDeleting}
+                >
+                  {isDeleting && <Loader2 className="animate-spin" />}
+                  Supprimer le produit
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Supprimer ce produit ?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Cette action est irréversible. Le produit «&nbsp;
+                    {product?.name}&nbsp;» sera définitivement supprimé de la
+                    base de données.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={isDeleting}>
+                    Annuler
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDelete}
+                    className="bg-destructive text-white hover:bg-destructive/90"
+                  >
+                    Supprimer
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        )}
       </form>
     </Form>
   )
