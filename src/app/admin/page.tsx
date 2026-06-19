@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server'
 import prisma from '@/lib/prisma'
 import { getProducts } from '@/app/actions/productActions'
 import { ProductGrid } from '@/components/admin/products'
+import { Suspense } from 'react'
 
 export default async function AdminPage() {
   // Le middleware protège déjà `/admin`, mais on revérifie côté serveur pour
@@ -18,7 +19,9 @@ export default async function AdminPage() {
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
-      <ProductGrid initialProducts={products.success ? products.data : []} />
+      <Suspense fallback={<div>Chargement...</div>}>
+        <ProductGrid initialProducts={products.success ? products.data : []} />
+      </Suspense>
     </div>
   )
 }
