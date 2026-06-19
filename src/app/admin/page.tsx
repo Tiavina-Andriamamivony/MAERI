@@ -5,6 +5,10 @@ import { getProducts } from '@/app/actions/productActions'
 import { ProductGrid } from '@/components/admin/products'
 import { Suspense } from 'react'
 
+// Page protégée par auth (Clerk) : jamais prérendue en statique. La rendre
+// dynamique évite aussi le « CSR bailout » du `useSearchParams` côté client.
+export const dynamic = 'force-dynamic'
+
 export default async function AdminPage() {
   // Le middleware protège déjà `/admin`, mais on revérifie côté serveur pour
   // garantir l'accès même si la config du matcher change. L'inscription Clerk
