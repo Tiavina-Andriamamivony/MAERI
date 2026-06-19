@@ -2,8 +2,7 @@ import { Geist, JetBrains_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider} from '@clerk/nextjs'
 import { ThemeProvider } from "@/components/theme-provider";
-import AnotherNav from "@/components/anotherNav";
-import { Footer } from "@/components/brand/footer";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-sans",
@@ -49,23 +48,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" suppressHydrationWarning>
-      <ClerkProvider>
-      <body
-        className={`${geistSans.variable} ${jetbrainsMono.variable} ${fraunces.variable} antialiased bg-background text-foreground`}
-      >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem
-          disableTransitionOnChange
+    <ClerkProvider>
+      <html lang="fr" suppressHydrationWarning>
+        <body
+          className={`${geistSans.variable} ${jetbrainsMono.variable} ${fraunces.variable} antialiased bg-background text-foreground`}
         >
-          <AnotherNav />
-          <main className="pt-20 md:pt-24">{children}</main>
-          <Footer />
-        </ThemeProvider>
-      </body>
-      </ClerkProvider>
-    </html>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="light"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+            <Toaster />
+          </ThemeProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
