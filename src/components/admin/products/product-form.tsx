@@ -147,6 +147,7 @@ export function ProductForm({
 
   return (
     <Form {...form}>
+      {/* skipcq: JS-0415 — imbrication inhérente à la composition shadcn Dialog/Form */}
       <form onSubmit={onSubmit}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
@@ -243,6 +244,7 @@ export function ProductForm({
         </DialogFooter>
 
         {canDelete && (
+          /* skipcq: JS-0415 — imbrication inhérente à la composition shadcn AlertDialog */
           <div className="mt-4 border-t border-border pt-4">
             <AlertDialog>
               <AlertDialogTrigger asChild>
