@@ -44,3 +44,9 @@ export const PRODUCT_TYPES: ProductTypeMeta[] = [
 export function getProductTypeBySlug(slug: string): ProductTypeMeta | undefined {
   return PRODUCT_TYPES.find((entry) => entry.slug === slug);
 }
+
+/** Chemin public de la page liste pour un type de produit donné. */
+export function productListPath(type: Product_type): string {
+  const meta = PRODUCT_TYPES.find((entry) => entry.type === type);
+  return `/products/list/${meta?.slug ?? ""}`;
+}

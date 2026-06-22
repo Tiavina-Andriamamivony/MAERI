@@ -1,10 +1,12 @@
 'use server'
 
 import type { z } from 'zod'
+import { revalidatePath } from 'next/cache'
 import { auth } from '@clerk/nextjs/server'
 import prisma from '@/lib/prisma'
 import { uploadImage, deleteImage } from '@/lib/blob'
 import { ActionResult, ok, fail } from '@/lib/action-result'
+import { productListPath } from '@/lib/product-types'
 import {
   createProductSchema,
   updateProductSchema,
@@ -31,6 +33,8 @@ export async function createProduct(formData: FormData): Promise<ActionResult<Pr
   const product = await prisma.product.create({
     data: { name, description, type, imageUrl, userId: user.data.id },
   })
+
+  revalidatePath(productListPath(product.type))
 
   return ok(product)
 }
@@ -64,6 +68,11 @@ export async function updateProduct(formData: FormData): Promise<ActionResult<Pr
     data: { name, description, type, imageUrl },
   })
 
+  revalidatePath(productListPath(product.type))
+  if (existing.type !== product.type) {
+    revalidatePath(productListPath(existing.type))
+  }
+
   return ok(product)
 }
 
@@ -79,6 +88,8 @@ export async function deleteProduct(formData: FormData): Promise<ActionResult> {
 
   await prisma.product.delete({ where: { id: existing.id } })
   await deleteImage(existing.imageUrl)
+
+  revalidatePath(productListPath(existing.type))
 
   return ok()
 }
