@@ -80,6 +80,7 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
 
   return (
     <style
+    // skipcq: JS-0443 - Génération dynamique sécurisée des variables CSS du graphique
       dangerouslySetInnerHTML={{
         __html: Object.entries(THEMES)
           .map(
