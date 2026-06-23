@@ -1,5 +1,18 @@
 version = 1
 
+# Code tiers / généré : non analysé (primitives shadcn, blocs CLI, sortie Prisma).
+# On ne corrige pas du code qu'on ne maintient pas à la main.
+exclude_patterns = [
+  "src/components/ui/**",
+  "src/components/magicui/**",
+  "src/components/app-sidebar.tsx",
+  "src/components/nav-main.tsx",
+  "src/components/nav-projects.tsx",
+  "src/components/nav-secondary.tsx",
+  "src/components/nav-user.tsx",
+  "src/app/generated/**",
+]
+
 [[analyzers]]
 name = "javascript"
 
