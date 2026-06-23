@@ -78,7 +78,7 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     return null
   }
 
-  return (
+  /*return (
     <style
     // skipcq: JS-0443 - Génération dynamique sécurisée des variables CSS du graphique
       dangerouslySetInnerHTML={{
@@ -100,7 +100,28 @@ ${colorConfig
           .join("\n"),
       }}
     />
+  )*/
+
+    const cssStyles = Object.entries(THEMES)
+  .map(
+    ([theme, prefix]) => `
+${prefix} [data-chart=${id}] {
+${colorConfig
+  .map(([key, itemConfig]) => {
+    const color =
+      itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
+      itemConfig.color
+    return color ? `  --color-${key}: ${color};` : null
+  })
+  .join("\n")}
+}
+`
   )
+  .join("\n");
+
+return (
+  <style>{cssStyles}</style>
+);
 }
 
 const ChartTooltip = RechartsPrimitive.Tooltip
