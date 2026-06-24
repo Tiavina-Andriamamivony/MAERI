@@ -1,4 +1,6 @@
 import { CTABlock, FeatureGrid, PageHero, SectionHeading } from "@/components/brand";
+import { ProductListButton } from "@/components/products/product-list-button";
+import { Product_type } from "@/app/generated/prisma/enums";
 import { Zap, Cog, Wrench, Fan } from "lucide-react";
 
 export const metadata = {
@@ -46,6 +48,9 @@ export default function SpecializedEquipment() {
         kicker="Produits · Équipements"
         title={<>Les pièces qui, <span className="italic text-muted-foreground">quand elles tombent,</span> arrêtent l&apos;usine.</>}
         lede="Nous traitons les équipements critiques avec le soin qu'ils méritent. Conseil technique, sourcing équivalent, suivi du cycle de vie."
+        actions={
+          <ProductListButton type={Product_type.SPECIALIZED_EQUIPMENT} label="Voir les équipements spécialisés" />
+        }
       />
 
       <section className="container mx-auto px-6 lg:px-10 py-24 md:py-32">

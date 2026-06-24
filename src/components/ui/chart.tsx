@@ -77,6 +77,9 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   if (!colorConfig.length) {
     return null
   }
+
+
+  
     const cssStyles = Object.entries(THEMES)
   .map(
     ([theme, prefix]) => `

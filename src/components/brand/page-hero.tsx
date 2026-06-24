@@ -7,6 +7,8 @@ type PageHeroProps = {
   kicker?: string;
   title: React.ReactNode;
   lede?: React.ReactNode;
+  /** Contenu optionnel (boutons, liens) rendu sous le lede, avant la rangée meta. */
+  actions?: React.ReactNode;
   meta?: { label: string; value: React.ReactNode }[];
   className?: string;
 };
@@ -21,6 +23,7 @@ export function PageHero({
   kicker,
   title,
   lede,
+  actions,
   meta,
   className,
 }: PageHeroProps) {
@@ -51,6 +54,15 @@ export function PageHero({
           >
             {lede}
           </p>
+        )}
+
+        {actions && (
+          <div
+            className="mt-10 animate-rise"
+            style={{ animationDelay: "180ms" }}
+          >
+            {actions}
+          </div>
         )}
 
         {meta && meta.length > 0 && (
