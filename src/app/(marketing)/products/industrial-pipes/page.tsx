@@ -1,4 +1,6 @@
+import { Product_type } from "@/app/generated/prisma/browser";
 import { CTABlock, FeatureGrid, PageHero, SectionHeading, StatBand } from "@/components/brand";
+import { ProductListButton } from "@/components/product/product-list-button";
 import { Droplets, Flame, GitBranch, Gauge } from "lucide-react";
 
 export const metadata = {
@@ -46,6 +48,9 @@ export default function IndustrialPipes() {
         kicker="Produits · Tuyauterie"
         title={<>Conduire les fluides, <span className="italic text-muted-foreground">sans compromis.</span></>}
         lede="Tuyaux, raccords et vannes pour vos réseaux d'eau, d'air, de vapeur et de produits chimiques. Catalogue complet, conseil sur spécifications."
+        actions={
+          <ProductListButton type={Product_type.INDUSTRIAL_PIPES} label="Voir les tuyaux industriels" />
+        }
         meta={[
           { label: "Familles", value: "04" },
           { label: "Matières", value: "PVC · PEHD · Acier · Inox" },
