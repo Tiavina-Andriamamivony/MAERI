@@ -7,6 +7,8 @@ import {
   StatBand,
 } from "@/components/brand";
 import { HardHat, Layers, Shield, Ruler } from "lucide-react";
+import { ProductListButton } from "@/components/product/product-list-button";
+import { Product_type } from "@/app/generated/prisma/browser";
 
 export const metadata = {
   title: "Matériaux de construction",
@@ -53,6 +55,10 @@ export default function ConstructionMaterials() {
         kicker="Produits · Construction"
         title={<>La matière <span className="italic text-muted-foreground">qui tient.</span></>}
         lede="Des matériaux de construction sélectionnés pour les chantiers industriels et les bâtiments qui doivent durer vingt ans."
+        actions={
+          <ProductListButton type={Product_type.CONSTRUCTION_MATERIALS} label="Voir les matériaux de construction" />       
+        }
+        
         meta={[
           { label: "Familles", value: "04" },
           { label: "Références", value: "60+" },
