@@ -48,11 +48,8 @@ import { Textarea } from "@/components/ui/textarea"
 
 import { TYPE_LABELS } from "./product-type-meta"
 
-/**
- * Champs texte du formulaire, validés côté client par `createProductSchema`.
- * L'image est gérée à part (input fichier non contrôlable par RHF) et le
- * serveur revalide l'ensemble — la validation zod reste la source de vérité.
- */
+// Champs texte validés côté client ; l'image est gérée à part (input fichier
+// non contrôlable par RHF) et le serveur revalide tout via zod.
 type ProductFormValues = {
   name: string
   description?: string
@@ -74,20 +71,13 @@ export function ProductForm({
 }: {
   title: string
   description: string
-  /** Produit à éditer ; absent en création. */
   product?: Product
   submitLabel: string
-  /** Server action recevant le `FormData` assemblé. */
   action: (formData: FormData) => Promise<ActionResult<Product>>
-  /** Appelé avec le produit persisté en cas de succès. */
   onSuccess: (product: Product) => void
   onCancel: () => void
-  /**
-   * Server action de suppression. Fournie uniquement en édition ; absente,
-   * le bouton « Supprimer » n'est pas rendu.
-   */
+  // Fournie uniquement en édition ; sans elle, le bouton « Supprimer » n'apparaît pas.
   onDelete?: (formData: FormData) => Promise<ActionResult>
-  /** Appelé une fois le produit supprimé en base. */
   onDeleted?: (product: Product) => void
 }) {
   const form = useForm<ProductFormValues>({

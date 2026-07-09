@@ -5,17 +5,12 @@ import { productListPath } from "@/lib/product-types";
 import type { Product_type } from "@/app/generated/prisma/enums";
 
 type ProductListButtonProps = {
-  /** Type de produit dont on veut afficher la liste. */
   type: Product_type;
-  /** Libellé du bouton. */
   label?: string;
   className?: string;
 };
 
-/**
- * Bouton de redirection vers la liste des produits d'un type donné
- * (`/products/list/<slug>`). Posé sous le PageHero des pages produits.
- */
+// Redirige vers la liste publique d'un type de produit (`/products/list/<slug>`).
 export function ProductListButton({
   type,
   label = "Voir tous les produits",

@@ -18,18 +18,14 @@ import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { ProductCard } from "./product-card"
 import { ProductForm } from "./product-form"
 
-/**
- * Conteneur des cartes produit : détient la liste affichée et orchestre les
- * dialogs de création / édition. La persistance vit dans les server actions ;
- * ici on se contente de refléter leur résultat dans l'état local.
- */
+// Affiche les cartes produit et pilote les dialogs de création / édition.
+// La persistance vit dans les server actions ; ici on reflète leur résultat.
 export function ProductGrid({ initialProducts }: { initialProducts: Product[] }) {
   const [products, setProducts] = useState<Product[]>(initialProducts)
   const [editing, setEditing] = useState<Product | null>(null)
   const [creating, setCreating] = useState(false)
 
-  // Filtre actif piloté par la sidebar via `?type=<slug>`. Slug inconnu ou
-  // absent => on affiche tous les produits.
+  // Filtre piloté par la sidebar via `?type=<slug>` ; slug absent ou inconnu => tout.
   const searchParams = useSearchParams()
   const activeType = getProductTypeBySlug(searchParams.get("type") ?? "")
 
@@ -112,7 +108,6 @@ export function ProductGrid({ initialProducts }: { initialProducts: Product[] })
         </div>
       )}
 
-      {/* Dialog d'édition */}
       <Dialog
         open={editing !== null}
         onOpenChange={(open) => !open && setEditing(null)}
@@ -135,7 +130,6 @@ export function ProductGrid({ initialProducts }: { initialProducts: Product[] })
         </DialogContent>
       </Dialog>
 
-      {/* Dialog d'ajout */}
       <Dialog open={creating} onOpenChange={setCreating}>
         <DialogContent>
           {creating && (

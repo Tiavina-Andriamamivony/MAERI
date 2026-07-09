@@ -14,10 +14,7 @@ import {
 import { ProductCover } from "./product-cover"
 import { TYPE_LABELS } from "./product-type-meta"
 
-/**
- * Carte d'un produit unique. Purement présentationnelle : elle remonte la
- * demande d'édition au conteneur via `onEdit`, sans connaître l'état global.
- */
+// Carte présentationnelle d'un produit ; remonte la demande d'édition via `onEdit`.
 export function ProductCard({
   product,
   onEdit,

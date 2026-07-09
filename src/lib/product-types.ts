@@ -1,18 +1,12 @@
 import { Product_type } from "@/app/generated/prisma/enums";
 
-/**
- * Métadonnées éditoriales pour chaque type de produit. La clé `slug` est la
- * partie d'URL exposée dans `/products/list/[type]` ; elle reprend volontairement
- * les slugs des pages produits statiques existantes pour rester cohérente.
- */
+// Métadonnées éditoriales d'un type de produit. Le `slug` sert d'URL dans
+// `/products/list/[type]` et reprend les slugs des pages produits existantes.
 export type ProductTypeMeta = {
   slug: string;
   type: Product_type;
-  /** Étiquette courte (kicker, nav). */
   label: string;
-  /** Titre éditorial de la page liste. */
   title: string;
-  /** Phrase d'accroche sous le titre. */
   lede: string;
 };
 
@@ -40,12 +34,10 @@ export const PRODUCT_TYPES: ProductTypeMeta[] = [
   },
 ];
 
-/** Résout un slug d'URL vers ses métadonnées, ou `undefined` si inconnu. */
 export function getProductTypeBySlug(slug: string): ProductTypeMeta | undefined {
   return PRODUCT_TYPES.find((entry) => entry.slug === slug);
 }
 
-/** Chemin public de la page liste pour un type de produit donné. */
 export function productListPath(type: Product_type): string {
   const meta = PRODUCT_TYPES.find((entry) => entry.type === type);
   return `/products/list/${meta?.slug ?? ""}`;
