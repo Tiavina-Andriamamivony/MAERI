@@ -36,3 +36,26 @@ enum Product_type {
   INDUSTRIAL_PIPES
   SPECIALIZED_EQUIPMENT
 }
+
+model Client {
+  clientId Int @id @default(autoincrement()) 
+  name String
+  Address String?
+  Province String
+  NIF String?
+  STAT String?
+  RCS String?
+  CF String?
+  CONTACT String?
+  PHONE String?
+  MAIL String?
+}
+
+model Article {
+  Reference String @id
+  Designation String?
+  Category String
+  UOM String?
+  PurchasePrice Int?
+  SellingPrice Int?
+}
