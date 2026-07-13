@@ -39,16 +39,7 @@ const data = {
           url: `/admin?type=${meta.slug}`,
         })),
       ],
-    },
-
-    {
-      title: "Analyses de données",
-      url: "/admin/analyses",
-      icon: <PackageIcon />,
-      isActive: true,
-  
-    },
-  ],
+    },  ],
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
