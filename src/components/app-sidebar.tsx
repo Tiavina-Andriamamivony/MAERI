@@ -27,12 +27,11 @@ const data = {
   navMain: [
     {
       title: "Produits",
-      // Sans `type`, la page admin affiche tous les produits.
       url: "/admin",
       icon: <PackageIcon />,
       isActive: true,
-      // Un sous-lien par type, dérivé de la source de vérité `PRODUCT_TYPES`
-      // pour garder les libellés alignés avec les pages produits publiques.
+      // Un sous-lien par type, dérivé de PRODUCT_TYPES pour rester aligné
+      // avec les pages produits publiques. Sans `type`, on affiche tout.
       items: [
         { title: "Tous les produits", url: "/admin" },
         ...PRODUCT_TYPES.map((meta) => ({
@@ -40,8 +39,7 @@ const data = {
           url: `/admin?type=${meta.slug}`,
         })),
       ],
-    },
-  ],
+    },  ],
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -54,7 +52,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="#">
+              <a href="/admin">
                 <div className="flex size-10 items-center justify-center text-sidebar-primary-foreground">
                   <Image src="/logo_new.png" alt="MA-ERI Consulting" width={40} height={40} className="size-10 rounded-lg" />
                 </div>

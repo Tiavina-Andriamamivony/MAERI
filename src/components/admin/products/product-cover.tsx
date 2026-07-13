@@ -2,11 +2,7 @@ import type { Product } from "@/app/generated/prisma/client"
 
 import { TYPE_COVER } from "./product-type-meta"
 
-/**
- * Couverture d'une carte produit : l'image du produit si elle existe, sinon un
- * dégradé de marque dérivé du type. La superposition sombre est gérée par la
- * carte parente, pas ici.
- */
+// Couverture de carte : l'image du produit, sinon un dégradé de secours par type.
 export function ProductCover({ product }: { product: Product }) {
   if (product.imageUrl) {
     return (

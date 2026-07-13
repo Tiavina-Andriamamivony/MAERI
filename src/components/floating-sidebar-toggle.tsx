@@ -4,10 +4,7 @@ import { Button } from "@/components/ui/button"
 import { useSidebar } from "@/components/ui/sidebar"
 import { PanelLeftIcon } from "lucide-react"
 
-/**
- * Bouton de bascule de la sidebar, fixé en permanence en haut à gauche de
- * l'écran (indépendant du décalage du contenu quand la sidebar s'ouvre/ferme).
- */
+// Bouton d'ouverture/fermeture de la sidebar, fixé en haut à gauche de l'écran.
 export function FloatingSidebarToggle() {
   const { toggleSidebar } = useSidebar()
 

@@ -109,17 +109,17 @@ export async function getProducts(): Promise<ActionResult<Product[]>> {
   return ok(products)
 }
 
-export async function getProductsByProductType(productType: Product_type ): Promise<ActionResult<Product[]>>{
-  const products = await prisma.product.findMany({where: {type: productType}, orderBy: { name: 'asc' } })
+export async function getProductsByProductType(
+  productType: Product_type,
+): Promise<ActionResult<Product[]>> {
+  const products = await prisma.product.findMany({
+    where: { type: productType },
+    orderBy: { name: 'asc' },
+  })
   return ok(products)
 }
 
-/**
- * Garde d'authentification pour les mutations produit. Résout l'utilisateur
- * Clerk courant vers son enregistrement Prisma (lié par `clerkId`). Comme
- * l'inscription est désactivée côté Clerk, tout utilisateur connecté est de
- * fait autorisé.
- */
+// Garde des mutations : résout l'utilisateur Clerk courant vers sa fiche Prisma.
 async function requireUser(): Promise<ActionResult<{ id: string }>> {
   const { userId: clerkId } = await auth()
   if (!clerkId) return fail('Utilisateur non authentifié')
@@ -130,7 +130,7 @@ async function requireUser(): Promise<ActionResult<{ id: string }>> {
   return ok({ id: user.id })
 }
 
-/** Champ image vide dans FormData (File de taille 0) => undefined. */
+// Un champ image vide (File de taille 0) devient undefined.
 function pickImage(formData: FormData): File | undefined {
   const file = formData.get('image')
   return file instanceof File && file.size > 0 ? file : undefined
