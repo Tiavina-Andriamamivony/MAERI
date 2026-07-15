@@ -38,24 +38,26 @@ enum Product_type {
 }
 
 model Client {
-  clientId Int @id @default(autoincrement()) 
-  name String
-  Address String?
-  Province String
-  NIF String?
-  STAT String?
-  RCS String?
-  CF String?
-  CONTACT String?
-  PHONE String?
-  MAIL String?
+  id           Int     @id @default(autoincrement())
+  code_client  Int     @unique
+  client       String
+  adress       String?
+  province     String
+  nif          Int?
+  stat         Int?
+  rcs          String?
+  cf           String?
+  contact      String?
+  phone        String?
+  mail         String?
 }
 
 model Article {
-  Reference String @id
-  Designation String?
-  Category String
-  UOM String?
-  PurchasePrice Int?
-  SellingPrice Int?
+   id             Int     @id @default(autoincrement())
+  reference      String  @unique
+  designation    String?
+  categorie      String?
+  uom            String?
+  prix_achat_ttc Float?
+  prix_vente_ttc Float?
 }

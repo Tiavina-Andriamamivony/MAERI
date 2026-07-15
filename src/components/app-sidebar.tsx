@@ -14,7 +14,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import Image from "next/image"
-import { PackageIcon } from "lucide-react"
+import { BarChart3Icon, PackageIcon } from "lucide-react"
 
 import { PRODUCT_TYPES } from "@/lib/product-types"
 
@@ -39,7 +39,13 @@ const data = {
           url: `/admin?type=${meta.slug}`,
         })),
       ],
-    },  ],
+    },
+    {
+      title: "Analyses",
+      url: "/admin/analyses",
+      icon: <BarChart3Icon />,
+    },
+  ],
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
