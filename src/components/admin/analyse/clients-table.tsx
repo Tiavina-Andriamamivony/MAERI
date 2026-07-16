@@ -1,14 +1,15 @@
 import type { Client } from "@/app/generated/prisma/client";
+import { createClient, updateClient } from "@/app/actions/clientActions";
 
 import DataTable, { type Column } from "./data-table";
 
 const COLUMNS: Column<Client>[] = [
-  { key: "code_client", label: "Code client" },
+  { key: "code_client", label: "Code client", readOnly: true },
   { key: "client", label: "Client" },
   { key: "adress", label: "Adresse" },
   { key: "province", label: "Province" },
-  { key: "nif", label: "NIF" },
-  { key: "stat", label: "STAT" },
+  { key: "nif", label: "NIF", type: "number" },
+  { key: "stat", label: "STAT", type: "number" },
   { key: "rcs", label: "RCS" },
   { key: "cf", label: "CF" },
   { key: "contact", label: "Contact" },
@@ -22,6 +23,8 @@ export default function ClientsTable({ clients }: { clients: Client[] }) {
       columns={COLUMNS}
       rows={clients}
       emptyMessage="Aucun client importé pour le moment."
+      onSave={updateClient}
+      onCreate={createClient}
     />
   );
 }

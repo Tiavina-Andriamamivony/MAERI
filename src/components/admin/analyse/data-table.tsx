@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -17,8 +17,11 @@ import {
   ChevronRightIcon,
   ChevronsLeftIcon,
   ChevronsRightIcon,
+  PlusIcon,
 } from "lucide-react";
+import { toast } from "sonner";
 
+import type { ActionResult } from "@/lib/action-result";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,9 +42,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+import EditableCell from "./editable-cell";
+import NewRow from "./new-row";
+
 export type Column<Row> = {
   key: keyof Row;
   label: string;
+  /** Type du champ en édition (défaut : texte). */
+  type?: "number";
+  /** Cellule affichée mais non modifiable (ex. clé unique). */
+  readOnly?: boolean;
 };
 
 type DataTableProps<Row extends { id: number }> = {
@@ -49,6 +59,16 @@ type DataTableProps<Row extends { id: number }> = {
   rows: Row[];
   emptyMessage: string;
   searchPlaceholder?: string;
+  /**
+   * Server action de mise à jour. Fournie => double-cliquer sur une cellule
+   * l'édite directement dans le tableau ; absente => tableau en lecture seule.
+   */
+  onSave?: (formData: FormData) => Promise<ActionResult<Row>>;
+  /**
+   * Server action de création. Fournie => un bouton « Ajouter une ligne »
+   * ouvre une ligne vierge éditable dans le tableau.
+   */
+  onCreate?: (formData: FormData) => Promise<ActionResult<Row>>;
 };
 
 const PAGE_SIZES = [10, 20, 30, 40, 50];
@@ -58,9 +78,37 @@ export default function DataTable<Row extends { id: number }>({
   rows,
   emptyMessage,
   searchPlaceholder = "Rechercher…",
+  onSave,
+  onCreate,
 }: DataTableProps<Row>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
+  const [isAdding, setIsAdding] = useState(false);
+
+  // Enregistre une cellule modifiée : on renvoie toute la ligne au serveur
+  // (avec la nouvelle valeur), qui la revalide et met le tableau à jour.
+  const saveCell = useCallback(
+    async (row: Row, key: keyof Row, newValue: string) => {
+      if (!onSave) return;
+      if (String(row[key] ?? "") === newValue) return; // rien n'a changé
+
+      const formData = new FormData();
+      for (const column of columns) {
+        const value = row[column.key];
+        formData.set(column.key as string, value === null ? "" : String(value));
+      }
+      formData.set("id", String(row.id));
+      formData.set(key as string, newValue);
+
+      const result = await onSave(formData);
+      if (!result.success) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success("Modification enregistrée.");
+    },
+    [columns, onSave]
+  );
 
   const tableColumns = useMemo<ColumnDef<Row>[]>(
     () =>
@@ -77,16 +125,30 @@ export default function DataTable<Row extends { id: number }>({
             <ArrowUpDownIcon className="ml-1 size-3.5 opacity-60" />
           </Button>
         ),
-        cell: ({ getValue }) => {
-          const value = getValue();
+        cell: ({ getValue, row }) => {
+          const value = getValue() as string | number | null;
+
+          // Lecture seule : ni édition activée, ni colonne verrouillée.
+          if (!onSave || column.readOnly) {
+            return (
+              <span className="text-foreground/90">
+                {value === null || value === undefined ? "" : String(value)}
+              </span>
+            );
+          }
+
           return (
-            <span className="text-foreground/90">
-              {value === null || value === undefined ? "" : String(value)}
-            </span>
+            <EditableCell
+              value={value}
+              type={column.type}
+              onCommit={(newValue) =>
+                saveCell(row.original, column.key, newValue)
+              }
+            />
           );
         },
       })),
-    [columns]
+    [columns, onSave, saveCell]
   );
 
   const table = useReactTable({
@@ -113,9 +175,22 @@ export default function DataTable<Row extends { id: number }>({
           placeholder={searchPlaceholder}
           className="max-w-xs"
         />
-        <span className="text-sm text-muted-foreground">
-          {table.getFilteredRowModel().rows.length} ligne(s)
-        </span>
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-muted-foreground">
+            {table.getFilteredRowModel().rows.length} ligne(s)
+          </span>
+          {onCreate && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsAdding(true)}
+              disabled={isAdding}
+            >
+              <PlusIcon className="size-4" />
+              Ajouter une ligne
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-lg border">
@@ -137,6 +212,14 @@ export default function DataTable<Row extends { id: number }>({
             ))}
           </TableHeader>
           <TableBody>
+            {isAdding && onCreate && (
+              <NewRow
+                columns={columns}
+                onCreate={onCreate}
+                onClose={() => setIsAdding(false)}
+              />
+            )}
+
             {table.getRowModel().rows.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id}>
@@ -150,7 +233,7 @@ export default function DataTable<Row extends { id: number }>({
                   ))}
                 </TableRow>
               ))
-            ) : (
+            ) : isAdding ? null : (
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
