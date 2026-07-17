@@ -19,7 +19,6 @@ import {
   ChevronsRightIcon,
   PlusIcon,
 } from "lucide-react";
-import { toast } from "sonner";
 
 import type { ActionResult } from "@/lib/action-result";
 import { Button } from "@/components/ui/button";
@@ -44,6 +43,8 @@ import {
 
 import EditableCell from "./editable-cell";
 import NewRow from "./new-row";
+import { rowToFormData } from "./row-form-data";
+import { useRowMutation } from "./use-row-mutation";
 
 export type Column<Row> = {
   key: keyof Row;
@@ -84,30 +85,21 @@ export default function DataTable<Row extends { id: number }>({
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [isAdding, setIsAdding] = useState(false);
+  const saveMutation = useRowMutation(onSave);
 
   // Enregistre une cellule modifiée : on renvoie toute la ligne au serveur
   // (avec la nouvelle valeur), qui la revalide et met le tableau à jour.
   const saveCell = useCallback(
-    async (row: Row, key: keyof Row, newValue: string) => {
-      if (!onSave) return;
+    (row: Row, key: keyof Row, newValue: string) => {
       if (String(row[key] ?? "") === newValue) return; // rien n'a changé
 
-      const formData = new FormData();
-      for (const column of columns) {
-        const value = row[column.key];
-        formData.set(column.key as string, value === null ? "" : String(value));
-      }
+      const formData = rowToFormData(columns, (columnKey) => row[columnKey]);
       formData.set("id", String(row.id));
       formData.set(key as string, newValue);
 
-      const result = await onSave(formData);
-      if (!result.success) {
-        toast.error(result.error);
-        return;
-      }
-      toast.success("Modification enregistrée.");
+      saveMutation.run(formData, "Modification enregistrée.");
     },
-    [columns, onSave]
+    [columns, saveMutation]
   );
 
   const tableColumns = useMemo<ColumnDef<Row>[]>(
@@ -118,7 +110,7 @@ export default function DataTable<Row extends { id: number }>({
           <Button
             variant="ghost"
             size="sm"
-            className="-ml-2.5 h-8 data-[sorted]:text-foreground"
+            className="-ml-2.5 h-8 data-sorted:text-foreground"
             onClick={() => col.toggleSorting(col.getIsSorted() === "asc")}
           >
             {column.label}
@@ -165,6 +157,10 @@ export default function DataTable<Row extends { id: number }>({
   });
 
   const pageSize = table.getState().pagination.pageSize;
+  const visibleRows = table.getRowModel().rows;
+  // Message « aucune donnée » : seulement si le tableau est vide ET qu'on
+  // n'est pas déjà en train d'ajouter une ligne.
+  const showEmptyMessage = visibleRows.length === 0 && !isAdding;
 
   return (
     <div className="flex w-full flex-col gap-4">
@@ -220,20 +216,17 @@ export default function DataTable<Row extends { id: number }>({
               />
             )}
 
-            {table.getRowModel().rows.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="whitespace-nowrap">
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : isAdding ? null : (
+            {visibleRows.map((row) => (
+              <TableRow key={row.id}>
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id} className="whitespace-nowrap">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+
+            {showEmptyMessage && (
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
