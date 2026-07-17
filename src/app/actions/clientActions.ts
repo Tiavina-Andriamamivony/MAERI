@@ -25,6 +25,14 @@ export async function createClient(
   const input = createClientSchema.safeParse(Object.fromEntries(formData));
   if (!input.success) return fail(firstError(input.error));
 
+  // Le code client est unique : refuser plutôt que de créer un doublon.
+  const existing = await prisma.client.findUnique({
+    where: { code_client: input.data.code_client },
+  });
+  if (existing) {
+    return fail(`Le code client « ${input.data.code_client} » existe déjà.`);
+  }
+
   const client = await prisma.client.create({ data: input.data });
 
   revalidatePath("/admin/analyses");
@@ -45,4 +53,18 @@ export async function updateClient(
 
   revalidatePath("/admin/analyses");
   return ok(client);
+}
+
+export async function deleteClient(id: number): Promise<ActionResult<Client>> {
+  const user = await requireUser();
+  if (!user.success) return user;
+
+  try {
+    const client = await prisma.client.delete({ where: { id } });
+    revalidatePath("/admin/analyses");
+    return ok(client);
+  } catch {
+    // Prisma lève P2025 si la ligne n'existe plus (déjà supprimée ailleurs).
+    return fail("Client introuvable ou déjà supprimé.");
+  }
 }

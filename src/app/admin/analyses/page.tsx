@@ -16,10 +16,14 @@ export default async function DataAnalysesPage() {
   const { userId: clerkId, redirectToSignIn } = await auth();
   if (!clerkId) return redirectToSignIn();
 
-  const user = await prisma.user.findUnique({ where: { clerkId } });
+  // Le contrôle utilisateur et le chargement des données sont indépendants :
+  // on les lance en parallèle pour ne pas bloquer l'affichage sur le lookup.
+  const [user, clients, articles] = await Promise.all([
+    prisma.user.findUnique({ where: { clerkId } }),
+    getClients(),
+    getArticles(),
+  ]);
   if (!user) return redirectToSignIn();
-
-  const [clients, articles] = await Promise.all([getClients(), getArticles()]);
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">

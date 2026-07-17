@@ -1,5 +1,9 @@
 import type { Article } from "@/app/generated/prisma/client";
-import { createArticle, updateArticle } from "@/app/actions/articleActions";
+import {
+  createArticle,
+  deleteArticle,
+  updateArticle,
+} from "@/app/actions/articleActions";
 
 import DataTable, { type Column } from "./data-table";
 
@@ -20,6 +24,8 @@ export default function ArticlesTable({ articles }: { articles: Article[] }) {
       emptyMessage="Aucun article importé pour le moment."
       onSave={updateArticle}
       onCreate={createArticle}
+      onDelete={deleteArticle}
+      labelKey="reference"
     />
   );
 }

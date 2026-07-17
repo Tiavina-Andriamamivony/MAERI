@@ -17,6 +17,11 @@ type NewRowProps<Row> = {
   onCreate: (formData: FormData) => Promise<ActionResult<Row>>;
   /** Ferme la ligne d'ajout (après enregistrement ou annulation). */
   onClose: () => void;
+  /**
+   * Nombre total de colonnes du tableau (champs + éventuelle colonne d'action).
+   * Sert à aligner la ligne d'ajout : cellule vide de fin et `colSpan`.
+   */
+  columnCount: number;
 };
 
 /**
@@ -28,7 +33,11 @@ export default function NewRow<Row>({
   columns,
   onCreate,
   onClose,
+  columnCount,
 }: NewRowProps<Row>) {
+  // Cellules vides à ajouter après les champs pour couvrir les colonnes
+  // supplémentaires du tableau (ex. colonne d'action de suppression).
+  const trailingCells = Math.max(0, columnCount - columns.length);
   const [values, setValues] = useState<Record<string, string>>({});
   const { run, isSaving } = useRowMutation(onCreate);
 
@@ -67,10 +76,14 @@ export default function NewRow<Row>({
             </TableCell>
           );
         })}
+        {/* Cellules vides alignées sous les colonnes d'action du tableau. */}
+        {Array.from({ length: trailingCells }, (_, index) => (
+          <TableCell key={`trailing-${index}`} />
+        ))}
       </TableRow>
 
       <TableRow>
-        <TableCell colSpan={columns.length}>
+        <TableCell colSpan={columnCount}>
           <div className="flex justify-end gap-2">
             <Button
               variant="outline"

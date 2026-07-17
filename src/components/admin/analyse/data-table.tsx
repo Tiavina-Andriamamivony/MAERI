@@ -18,6 +18,7 @@ import {
   ChevronsLeftIcon,
   ChevronsRightIcon,
   PlusIcon,
+  Trash2Icon,
 } from "lucide-react";
 
 import type { ActionResult } from "@/lib/action-result";
@@ -44,6 +45,7 @@ import {
 import EditableCell from "./editable-cell";
 import NewRow from "./new-row";
 import { rowToFormData } from "./row-form-data";
+import { useRowDeletion } from "./use-row-deletion";
 import { useRowMutation } from "./use-row-mutation";
 
 export type Column<Row> = {
@@ -70,6 +72,18 @@ type DataTableProps<Row extends { id: number }> = {
    * ouvre une ligne vierge éditable dans le tableau.
    */
   onCreate?: (formData: FormData) => Promise<ActionResult<Row>>;
+  /**
+   * Server action de suppression. Fournie => une colonne d'action affiche un
+   * bouton corbeille par ligne, avec fenêtre d'annulation de 5 s (cf.
+   * {@link useRowDeletion}).
+   */
+  onDelete?: (id: number) => Promise<ActionResult<Row>>;
+  /**
+   * Colonne à utiliser comme libellé d'une ligne dans le toast de suppression
+   * (ex. `reference`). Par défaut, la première colonne. Une clé (et non une
+   * fonction) pour rester sérialisable à travers la frontière serveur/client.
+   */
+  labelKey?: keyof Row;
 };
 
 const PAGE_SIZES = [10, 20, 30, 40, 50];
@@ -81,11 +95,20 @@ export default function DataTable<Row extends { id: number }>({
   searchPlaceholder = "Rechercher…",
   onSave,
   onCreate,
+  onDelete,
+  labelKey,
 }: DataTableProps<Row>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [isAdding, setIsAdding] = useState(false);
   const saveMutation = useRowMutation(onSave);
+  const { pendingIds, remove } = useRowDeletion(onDelete);
+
+  // Masque les lignes en attente de suppression définitive (fenêtre d'undo).
+  const visibleData = useMemo(
+    () => rows.filter((row) => !pendingIds.has(row.id)),
+    [rows, pendingIds]
+  );
 
   // Enregistre une cellule modifiée : on renvoie toute la ligne au serveur
   // (avec la nouvelle valeur), qui la revalide et met le tableau à jour.
@@ -102,49 +125,74 @@ export default function DataTable<Row extends { id: number }>({
     [columns, saveMutation]
   );
 
-  const tableColumns = useMemo<ColumnDef<Row>[]>(
-    () =>
-      columns.map((column) => ({
-        accessorKey: column.key as string,
-        header: ({ column: col }) => (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="-ml-2.5 h-8 data-sorted:text-foreground"
-            onClick={() => col.toggleSorting(col.getIsSorted() === "asc")}
-          >
-            {column.label}
-            <ArrowUpDownIcon className="ml-1 size-3.5 opacity-60" />
-          </Button>
-        ),
-        cell: ({ getValue, row }) => {
-          const value = getValue() as string | number | null;
+  const tableColumns = useMemo<ColumnDef<Row>[]>(() => {
+    const dataColumns: ColumnDef<Row>[] = columns.map((column) => ({
+      accessorKey: column.key as string,
+      header: ({ column: col }) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="-ml-2.5 h-8 data-sorted:text-foreground"
+          onClick={() => col.toggleSorting(col.getIsSorted() === "asc")}
+        >
+          {column.label}
+          <ArrowUpDownIcon className="ml-1 size-3.5 opacity-60" />
+        </Button>
+      ),
+      cell: ({ getValue, row }) => {
+        const value = getValue() as string | number | null;
 
-          // Lecture seule : ni édition activée, ni colonne verrouillée.
-          if (!onSave || column.readOnly) {
-            return (
-              <span className="text-foreground/90">
-                {value === null || value === undefined ? "" : String(value)}
-              </span>
-            );
-          }
-
+        // Lecture seule : ni édition activée, ni colonne verrouillée.
+        if (!onSave || column.readOnly) {
           return (
-            <EditableCell
-              value={value}
-              type={column.type}
-              onCommit={(newValue) =>
-                saveCell(row.original, column.key, newValue)
-              }
-            />
+            <span className="text-foreground/90">
+              {value === null || value === undefined ? "" : String(value)}
+            </span>
+          );
+        }
+
+        return (
+          <EditableCell
+            value={value}
+            type={column.type}
+            onCommit={(newValue) =>
+              saveCell(row.original, column.key, newValue)
+            }
+          />
+        );
+      },
+    }));
+
+    // Colonne d'action de suppression, ancrée à droite.
+    if (onDelete) {
+      dataColumns.push({
+        id: "actions",
+        header: () => <span className="sr-only">Actions</span>,
+        cell: ({ row }) => {
+          const key = labelKey ?? columns[0].key;
+          const label = String(row.original[key] ?? "");
+          return (
+            <div className="flex justify-end">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-8 text-muted-foreground hover:text-destructive"
+                onClick={() => remove(row.original.id, label)}
+                aria-label={`Supprimer ${label}`.trim()}
+              >
+                <Trash2Icon className="size-4" />
+              </Button>
+            </div>
           );
         },
-      })),
-    [columns, onSave, saveCell]
-  );
+      });
+    }
+
+    return dataColumns;
+  }, [columns, onSave, onDelete, labelKey, saveCell, remove]);
 
   const table = useReactTable({
-    data: rows,
+    data: visibleData,
     columns: tableColumns,
     state: { sorting, globalFilter },
     onSortingChange: setSorting,
@@ -213,6 +261,7 @@ export default function DataTable<Row extends { id: number }>({
                 columns={columns}
                 onCreate={onCreate}
                 onClose={() => setIsAdding(false)}
+                columnCount={tableColumns.length}
               />
             )}
 
@@ -229,7 +278,7 @@ export default function DataTable<Row extends { id: number }>({
             {showEmptyMessage && (
               <TableRow>
                 <TableCell
-                  colSpan={columns.length}
+                  colSpan={tableColumns.length}
                   className="h-24 text-center text-muted-foreground italic"
                 >
                   {emptyMessage}

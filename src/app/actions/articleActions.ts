@@ -25,6 +25,14 @@ export async function createArticle(
   const input = createArticleSchema.safeParse(Object.fromEntries(formData));
   if (!input.success) return fail(firstError(input.error));
 
+  // La référence est unique : refuser plutôt que de créer un doublon.
+  const existing = await prisma.article.findUnique({
+    where: { reference: input.data.reference },
+  });
+  if (existing) {
+    return fail(`La référence « ${input.data.reference} » existe déjà.`);
+  }
+
   const article = await prisma.article.create({ data: input.data });
 
   revalidatePath("/admin/analyses");
@@ -45,4 +53,20 @@ export async function updateArticle(
 
   revalidatePath("/admin/analyses");
   return ok(article);
+}
+
+export async function deleteArticle(
+  id: number,
+): Promise<ActionResult<Article>> {
+  const user = await requireUser();
+  if (!user.success) return user;
+
+  try {
+    const article = await prisma.article.delete({ where: { id } });
+    revalidatePath("/admin/analyses");
+    return ok(article);
+  } catch {
+    // Prisma lève P2025 si la ligne n'existe plus (déjà supprimée ailleurs).
+    return fail("Article introuvable ou déjà supprimé.");
+  }
 }

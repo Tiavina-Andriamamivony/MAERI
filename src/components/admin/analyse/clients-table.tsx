@@ -1,5 +1,9 @@
 import type { Client } from "@/app/generated/prisma/client";
-import { createClient, updateClient } from "@/app/actions/clientActions";
+import {
+  createClient,
+  deleteClient,
+  updateClient,
+} from "@/app/actions/clientActions";
 
 import DataTable, { type Column } from "./data-table";
 
@@ -25,6 +29,8 @@ export default function ClientsTable({ clients }: { clients: Client[] }) {
       emptyMessage="Aucun client importé pour le moment."
       onSave={updateClient}
       onCreate={createClient}
+      onDelete={deleteClient}
+      labelKey="client"
     />
   );
 }
