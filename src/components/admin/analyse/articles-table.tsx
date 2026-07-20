@@ -22,10 +22,12 @@ export default function ArticlesTable({ articles }: { articles: Article[] }) {
       columns={COLUMNS}
       rows={articles}
       emptyMessage="Aucun article importé pour le moment."
-      onSave={updateArticle}
-      onCreate={createArticle}
-      onDelete={deleteArticle}
-      labelKey="reference"
+      actions={{
+        update: updateArticle,
+        create: createArticle,
+        delete: deleteArticle,
+        labelKey: "reference",
+      }}
     />
   );
 }

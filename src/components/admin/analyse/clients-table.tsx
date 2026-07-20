@@ -27,10 +27,12 @@ export default function ClientsTable({ clients }: { clients: Client[] }) {
       columns={COLUMNS}
       rows={clients}
       emptyMessage="Aucun client importé pour le moment."
-      onSave={updateClient}
-      onCreate={createClient}
-      onDelete={deleteClient}
-      labelKey="client"
+      actions={{
+        update: updateClient,
+        create: createClient,
+        delete: deleteClient,
+        labelKey: "client",
+      }}
     />
   );
 }
