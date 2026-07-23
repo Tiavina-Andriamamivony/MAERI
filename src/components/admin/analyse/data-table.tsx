@@ -96,9 +96,9 @@ export default function DataTable<Row extends { id: number }>({
 
   const tableColumns = useTableColumns({
     columns,
-    editable: !!actions?.update,
+    editable: Boolean(actions?.update),
     onEditCommit: saveCell,
-    deletable: !!actions?.delete,
+    deletable: Boolean(actions?.delete),
     onDelete: remove,
     labelKey: actions?.labelKey,
   });

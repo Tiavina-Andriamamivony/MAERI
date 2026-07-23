@@ -59,8 +59,8 @@ function ImportFeedback({ result }: { result: ImportResult }) {
     >
       {result.errors.length > 0 && (
         <ul className="list-disc pl-5">
-          {result.errors.map((error, index) => (
-            <li key={index}>{error}</li>
+          {result.errors.map((error) => (
+            <li key={error}>{error}</li>
           ))}
         </ul>
       )}
@@ -73,8 +73,8 @@ function ImportFeedback({ result }: { result: ImportResult }) {
           </p>
           {sheet.errors.length > 0 && (
             <ul className="mt-1 list-disc pl-5 text-muted-foreground">
-              {sheet.errors.map((error, index) => (
-                <li key={index}>{error}</li>
+              {sheet.errors.map((error) => (
+                <li key={error}>{error}</li>
               ))}
             </ul>
           )}

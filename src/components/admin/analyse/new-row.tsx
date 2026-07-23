@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 
 import type { ActionResult } from "@/lib/action-result";
@@ -56,26 +56,20 @@ export default function NewRow<Row>({
           saisir, alors qu'en édition d'une ligne existante elle reste
           verrouillée. La validation zod (schéma de création) reste la garde.
         */}
-        {columns.map((column, index) => {
-          const name = column.key as string;
-          return (
-            <TableCell key={name} className="whitespace-nowrap">
-              <Input
-                autoFocus={index === 0}
-                type={column.type === "number" ? "number" : "text"}
-                step={column.type === "number" ? "any" : undefined}
-                value={values[name] ?? ""}
-                onChange={(event) =>
-                  setValues((current) => ({
-                    ...current,
-                    [name]: event.target.value,
-                  }))
-                }
-                className="h-8"
-              />
-            </TableCell>
-          );
-        })}
+        {columns.map((column, index) => (
+          <NewRowCell
+            key={column.key as string}
+            column={column}
+            value={values[column.key as string] ?? ""}
+            autoFocus={index === 0}
+            onChange={(newValue) =>
+              setValues((current) => ({
+                ...current,
+                [column.key as string]: newValue,
+              }))
+            }
+          />
+        ))}
         {/* Cellules vides alignées sous les colonnes d'action du tableau. */}
         {Array.from({ length: trailingCells }, (_, index) => (
           <TableCell key={`trailing-${index}`} />
@@ -101,5 +95,41 @@ export default function NewRow<Row>({
         </TableCell>
       </TableRow>
     </>
+  );
+}
+
+type NewRowCellProps<Row> = {
+  column: Column<Row>;
+  value: string;
+  /** Donne le focus à ce champ au montage (première colonne de la ligne). */
+  autoFocus?: boolean;
+  onChange: (newValue: string) => void;
+};
+
+/** Une cellule de la ligne d'ajout : un champ de saisie par colonne. */
+function NewRowCell<Row>({
+  column,
+  value,
+  autoFocus,
+  onChange,
+}: NewRowCellProps<Row>) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Focus programmatique plutôt que l'attribut `autoFocus` (accessibilité).
+  useEffect(() => {
+    if (autoFocus) inputRef.current?.focus();
+  }, [autoFocus]);
+
+  return (
+    <TableCell className="whitespace-nowrap">
+      <Input
+        ref={inputRef}
+        type={column.type === "number" ? "number" : "text"}
+        step={column.type === "number" ? "any" : undefined}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="h-8"
+      />
+    </TableCell>
   );
 }

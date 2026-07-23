@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Input } from "@/components/ui/input";
 
@@ -24,7 +24,13 @@ export default function EditableCell({
   const [isEditing, setIsEditing] = useState(false);
   // Passe à true sur Échap pour empêcher le `onBlur` suivant d'enregistrer.
   const cancelled = useRef(false);
+  const inputRef = useRef<HTMLInputElement>(null);
   const displayValue = value === null ? "" : String(value);
+
+  // Donne le focus au champ dès qu'on passe en édition (remplace `autoFocus`).
+  useEffect(() => {
+    if (isEditing) inputRef.current?.focus();
+  }, [isEditing]);
 
   if (!isEditing) {
     return (
@@ -43,7 +49,7 @@ export default function EditableCell({
 
   return (
     <Input
-      autoFocus
+      ref={inputRef}
       type={type === "number" ? "number" : "text"}
       step={type === "number" ? "any" : undefined}
       defaultValue={displayValue}

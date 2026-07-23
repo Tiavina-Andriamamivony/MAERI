@@ -13,7 +13,7 @@ import {
 import { Article } from "../generated/prisma/client";
 
 export default async function getArticles(): Promise<Article[]> {
-  return prisma.article.findMany({ orderBy: { reference: "asc" } });
+  return await prisma.article.findMany({ orderBy: { reference: "asc" } });
 }
 
 export async function createArticle(

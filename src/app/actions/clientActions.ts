@@ -13,7 +13,7 @@ import {
 import { Client } from "../generated/prisma/client";
 
 export default async function getClients(): Promise<Client[]> {
-  return prisma.client.findMany({ orderBy: { code_client: "asc" } });
+  return await prisma.client.findMany({ orderBy: { code_client: "asc" } });
 }
 
 export async function createClient(
