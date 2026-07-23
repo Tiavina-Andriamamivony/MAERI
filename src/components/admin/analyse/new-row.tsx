@@ -61,7 +61,7 @@ export default function NewRow<Row>({
             key={column.key as string}
             column={column}
             value={values[column.key as string] ?? ""}
-            autoFocus={index === 0}
+            focusOnMount={index === 0}
             onChange={(newValue) =>
               setValues((current) => ({
                 ...current,
@@ -78,23 +78,35 @@ export default function NewRow<Row>({
 
       <TableRow>
         <TableCell colSpan={columnCount}>
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onClose}
-              disabled={isSaving}
-            >
-              Annuler
-            </Button>
-            <Button size="sm" onClick={save} disabled={isSaving}>
-              {isSaving && <Loader2 className="animate-spin" />}
-              Enregistrer
-            </Button>
-          </div>
+          <NewRowActions
+            onCancel={onClose}
+            onSave={save}
+            isSaving={isSaving}
+          />
         </TableCell>
       </TableRow>
     </>
+  );
+}
+
+type NewRowActionsProps = {
+  onCancel: () => void;
+  onSave: () => void;
+  isSaving: boolean;
+};
+
+/** Boutons « Annuler » / « Enregistrer » de la ligne d'ajout. */
+function NewRowActions({ onCancel, onSave, isSaving }: NewRowActionsProps) {
+  return (
+    <div className="flex justify-end gap-2">
+      <Button variant="outline" size="sm" onClick={onCancel} disabled={isSaving}>
+        Annuler
+      </Button>
+      <Button size="sm" onClick={onSave} disabled={isSaving}>
+        {isSaving && <Loader2 className="animate-spin" />}
+        Enregistrer
+      </Button>
+    </div>
   );
 }
 
@@ -102,7 +114,7 @@ type NewRowCellProps<Row> = {
   column: Column<Row>;
   value: string;
   /** Donne le focus à ce champ au montage (première colonne de la ligne). */
-  autoFocus?: boolean;
+  focusOnMount?: boolean;
   onChange: (newValue: string) => void;
 };
 
@@ -110,15 +122,15 @@ type NewRowCellProps<Row> = {
 function NewRowCell<Row>({
   column,
   value,
-  autoFocus,
+  focusOnMount,
   onChange,
 }: NewRowCellProps<Row>) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Focus programmatique plutôt que l'attribut `autoFocus` (accessibilité).
   useEffect(() => {
-    if (autoFocus) inputRef.current?.focus();
-  }, [autoFocus]);
+    if (focusOnMount) inputRef.current?.focus();
+  }, [focusOnMount]);
 
   return (
     <TableCell className="whitespace-nowrap">
