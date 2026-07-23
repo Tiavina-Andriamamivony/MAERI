@@ -1,11 +1,11 @@
 'use server'
 
-import type { z } from 'zod'
 import { revalidatePath } from 'next/cache'
-import { auth } from '@clerk/nextjs/server'
 import prisma from '@/lib/prisma'
 import { uploadImage, deleteImage } from '@/lib/blob'
 import { ActionResult, ok, fail } from '@/lib/action-result'
+import { requireUser } from '@/lib/auth-guard'
+import { firstError } from '@/lib/validations/first-error'
 import { productListPath } from '@/lib/product-types'
 import {
   createProductSchema,
@@ -119,23 +119,8 @@ export async function getProductsByProductType(
   return ok(products)
 }
 
-// Garde des mutations : résout l'utilisateur Clerk courant vers sa fiche Prisma.
-async function requireUser(): Promise<ActionResult<{ id: string }>> {
-  const { userId: clerkId } = await auth()
-  if (!clerkId) return fail('Utilisateur non authentifié')
-
-  const user = await prisma.user.findUnique({ where: { clerkId } })
-  if (!user) return fail('Utilisateur introuvable')
-
-  return ok({ id: user.id })
-}
-
-// Un champ image vide (File de taille 0) devient undefined.
+/** Champ image vide dans FormData (File de taille 0) => undefined. */
 function pickImage(formData: FormData): File | undefined {
   const file = formData.get('image')
   return file instanceof File && file.size > 0 ? file : undefined
-}
-
-function firstError(error: z.ZodError): string {
-  return error.issues[0]?.message ?? 'Données invalides'
 }
