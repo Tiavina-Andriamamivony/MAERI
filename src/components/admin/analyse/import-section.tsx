@@ -2,13 +2,15 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import { UploadIcon } from "lucide-react";
+import { DownloadIcon, UploadIcon } from "lucide-react";
 
 import { importExcel } from "@/app/actions/excelImporter";
 import type { ImportResult } from "@/types/import";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+
+const EXPORT_URL = "/api/admin/analyses/export";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -20,6 +22,20 @@ function SubmitButton() {
   );
 }
 
+/** Télécharge les tableaux Clients + Articles dans un classeur Excel. */
+function ExportButton() {
+  return (
+    <a
+      href={EXPORT_URL}
+      download
+      className={cn(buttonVariants({ variant: "outline" }))}
+    >
+      <DownloadIcon />
+      Exporter en Excel
+    </a>
+  );
+}
+
 export default function ImportSection() {
   const [result, submit] = useActionState<ImportResult | null, FormData>(
     importExcel,
@@ -28,19 +44,22 @@ export default function ImportSection() {
 
   return (
     <div className="flex w-full max-w-2xl flex-col gap-4">
-      <form
-        action={submit}
-        className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center"
-      >
-        <Input
-          type="file"
-          name="file"
-          accept=".xlsx,.xls"
-          required
-          className="cursor-pointer"
-        />
-        <SubmitButton />
-      </form>
+      <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+        <form
+          action={submit}
+          className="flex flex-1 flex-col items-stretch gap-3 sm:flex-row sm:items-center"
+        >
+          <Input
+            type="file"
+            name="file"
+            accept=".xlsx,.xls"
+            required
+            className="cursor-pointer"
+          />
+          <SubmitButton />
+        </form>
+        <ExportButton />
+      </div>
 
       {result && <ImportFeedback result={result} />}
     </div>

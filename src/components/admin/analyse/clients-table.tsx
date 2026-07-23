@@ -5,26 +5,13 @@ import {
   updateClient,
 } from "@/app/actions/clientActions";
 
-import DataTable, { type Column } from "./data-table";
-
-const COLUMNS: Column<Client>[] = [
-  { key: "code_client", label: "Code client", readOnly: true },
-  { key: "client", label: "Client" },
-  { key: "adress", label: "Adresse" },
-  { key: "province", label: "Province" },
-  { key: "nif", label: "NIF", type: "number" },
-  { key: "stat", label: "STAT", type: "number" },
-  { key: "rcs", label: "RCS" },
-  { key: "cf", label: "CF" },
-  { key: "contact", label: "Contact" },
-  { key: "phone", label: "Téléphone" },
-  { key: "mail", label: "Mail" },
-];
+import DataTable from "./data-table";
+import { CLIENT_COLUMNS } from "./columns";
 
 export default function ClientsTable({ clients }: { clients: Client[] }) {
   return (
     <DataTable
-      columns={COLUMNS}
+      columns={CLIENT_COLUMNS}
       rows={clients}
       emptyMessage="Aucun client importé pour le moment."
       actions={{
