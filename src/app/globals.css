@@ -174,6 +174,37 @@
   --sidebar-ring: var(--brand);
 }
 
+/* ------------------------------------------------------------------ */
+/*  Scope admin : accent teal/cyan (#42c6c5 → #00fff0 + dégradé gris)  */
+/*  Réancre --brand, --ring et --chart-* sur la teinte teal (hue ~190) */
+/*  pour tout le sous-arbre `.theme-admin` (chart, sélection, focus).  */
+/*  Les propriétés custom héritent par le DOM : aucune couleur en dur  */
+/*  côté composant, la vitrine publique garde l'ember.                 */
+/* ------------------------------------------------------------------ */
+.theme-admin {
+  --brand: oklch(0.66 0.10 192);
+  --brand-foreground: var(--paper);
+  --ring: oklch(0.66 0.10 192);
+
+  --chart-1: oklch(0.66 0.10 192); /* teal principal (#42c6c5) */
+  --chart-2: oklch(0.78 0.12 190); /* teal clair */
+  --chart-3: oklch(0.86 0.13 188); /* cyan accent (vers #00fff0) */
+  --chart-4: oklch(0.55 0.06 200); /* teal-gris profond */
+  --chart-5: oklch(0.45 0.02 210); /* gris */
+}
+
+.dark .theme-admin {
+  --brand: oklch(0.80 0.11 190);
+  --brand-foreground: oklch(0.13 0.008 60);
+  --ring: oklch(0.80 0.11 190);
+
+  --chart-1: oklch(0.80 0.11 190);
+  --chart-2: oklch(0.72 0.11 193);
+  --chart-3: oklch(0.88 0.13 187);
+  --chart-4: oklch(0.58 0.06 200);
+  --chart-5: oklch(0.50 0.02 210);
+}
+
 @layer base {
   * { @apply border-border outline-ring/50; }
 
