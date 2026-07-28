@@ -8,12 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TableCell, TableRow } from "@/components/ui/table";
 
-import type { Column } from "./data-table";
+import type { FieldColumn } from "./column-model";
 import { rowToFormData } from "./row-form-data";
 import { useRowMutation } from "./use-row-mutation";
 
 type NewRowProps<Row> = {
-  columns: Column<Row>[];
+  /** Colonnes saisissables : les colonnes calculées n'ont pas de champ. */
+  columns: FieldColumn<Row>[];
   onCreate: (formData: FormData) => Promise<ActionResult<Row>>;
   /** Ferme la ligne d'ajout (après enregistrement ou annulation). */
   onClose: () => void;
@@ -111,7 +112,7 @@ function NewRowActions({ onCancel, onSave, isSaving }: NewRowActionsProps) {
 }
 
 type NewRowCellProps<Row> = {
-  column: Column<Row>;
+  column: FieldColumn<Row>;
   value: string;
   /** Donne le focus à ce champ au montage (première colonne de la ligne). */
   focusOnMount?: boolean;

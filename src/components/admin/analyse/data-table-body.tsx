@@ -12,12 +12,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import type { Column } from "./data-table";
+import type { FieldColumn } from "./column-model";
 import NewRow from "./new-row";
 
 type DataTableBodyProps<Row extends { id: number }> = {
   table: Table<Row>;
-  columns: Column<Row>[];
+  /** Colonnes saisissables de la ligne d'ajout (hors colonnes calculées). */
+  columns: FieldColumn<Row>[];
   /** Nombre total de colonnes affichées (champs + éventuelle colonne d'action). */
   columnCount: number;
   emptyMessage: string;

@@ -12,6 +12,7 @@ import {
 
 import type { ActionResult } from "@/lib/action-result";
 
+import { fieldColumns, type Column } from "./column-model";
 import DataTableBody from "./data-table-body";
 import DataTablePagination from "./data-table-pagination";
 import DataTableToolbar from "./data-table-toolbar";
@@ -20,14 +21,7 @@ import { useRowDeletion } from "./use-row-deletion";
 import { useRowMutation } from "./use-row-mutation";
 import { useTableColumns } from "./use-table-columns";
 
-export type Column<Row> = {
-  key: keyof Row;
-  label: string;
-  /** Type du champ en édition (défaut : texte). */
-  type?: "number";
-  /** Cellule affichée mais non modifiable (ex. clé unique). */
-  readOnly?: boolean;
-};
+export type { Column, DerivedColumn, FieldColumn } from "./column-model";
 
 /**
  * Server actions CRUD du tableau. Chaque action est optionnelle et active la
@@ -79,19 +73,26 @@ export default function DataTable<Row extends { id: number }>({
     [rows, pendingIds]
   );
 
+  // Seules les colonnes adossées à un champ sont lues, saisies ou envoyées au
+  // serveur : les colonnes calculées n'existent pas en base.
+  const editableColumns = useMemo(() => fieldColumns(columns), [columns]);
+
   // Enregistre une cellule modifiée : on renvoie toute la ligne au serveur
   // (avec la nouvelle valeur), qui la revalide et met le tableau à jour.
   const saveCell = useCallback(
     (row: Row, key: keyof Row, newValue: string) => {
       if (String(row[key] ?? "") === newValue) return; // rien n'a changé
 
-      const formData = rowToFormData(columns, (columnKey) => row[columnKey]);
+      const formData = rowToFormData(
+        editableColumns,
+        (columnKey) => row[columnKey]
+      );
       formData.set("id", String(row.id));
       formData.set(key as string, newValue);
 
       saveMutation.run(formData, "Modification enregistrée.");
     },
-    [columns, saveMutation]
+    [editableColumns, saveMutation]
   );
 
   const tableColumns = useTableColumns({
@@ -129,7 +130,7 @@ export default function DataTable<Row extends { id: number }>({
 
       <DataTableBody
         table={table}
-        columns={columns}
+        columns={editableColumns}
         columnCount={tableColumns.length}
         emptyMessage={emptyMessage}
         onCreate={actions?.create}

@@ -1,6 +1,10 @@
 import { utils, write, type WorkBook } from "xlsx";
 
-import type { Column } from "@/components/admin/analyse/data-table";
+import {
+  computeDerived,
+  isDerivedColumn,
+  type Column,
+} from "@/components/admin/analyse/column-model";
 
 /** Un onglet à exporter : ses lignes, ses colonnes et le nom de l'onglet. */
 export type SheetExport<Row> = {
@@ -10,6 +14,14 @@ export type SheetExport<Row> = {
   rows: Row[];
 };
 
+/** Valeur exportée d'une cellule : lue depuis la ligne, ou calculée. */
+function cellValue<Row>(column: Column<Row>, row: Row): unknown {
+  if (isDerivedColumn(column)) {
+    return computeDerived(column, (key) => row[key]) ?? "";
+  }
+  return row[column.key] ?? "";
+}
+
 /**
  * Construit une feuille : première ligne = libellés des colonnes (en-têtes
  * reconnus à l'import), lignes suivantes = valeurs. Les cellules vides
@@ -18,7 +30,7 @@ export type SheetExport<Row> = {
 function buildSheet<Row>(columns: Column<Row>[], rows: Row[]) {
   const header = columns.map((column) => column.label);
   const body = rows.map((row) =>
-    columns.map((column) => row[column.key] ?? "")
+    columns.map((column) => cellValue(column, row))
   );
   return utils.aoa_to_sheet([header, ...body]);
 }

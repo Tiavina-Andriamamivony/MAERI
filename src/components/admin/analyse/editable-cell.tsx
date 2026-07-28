@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 
 import { Input } from "@/components/ui/input";
 
+import ReadOnlyCell from "./read-only-cell";
+
 type EditableCellProps = {
   value: string | number | null;
   /** Type du champ en édition (défaut : texte). */
@@ -25,7 +27,7 @@ export default function EditableCell({
   // Passe à true sur Échap pour empêcher le `onBlur` suivant d'enregistrer.
   const cancelled = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const displayValue = value === null ? "" : String(value);
+  const initialInputValue = value === null ? "" : String(value);
 
   // Donne le focus au champ dès qu'on passe en édition (remplace `autoFocus`).
   useEffect(() => {
@@ -39,10 +41,10 @@ export default function EditableCell({
           cancelled.current = false;
           setIsEditing(true);
         }}
-        className="block cursor-text text-foreground/90"
+        className="block cursor-text"
         title="Double-cliquez pour modifier"
       >
-        {displayValue || <span className="text-muted-foreground">—</span>}
+        <ReadOnlyCell value={value} />
       </span>
     );
   }
@@ -52,7 +54,7 @@ export default function EditableCell({
       ref={inputRef}
       type={type === "number" ? "number" : "text"}
       step={type === "number" ? "any" : undefined}
-      defaultValue={displayValue}
+      defaultValue={initialInputValue}
       className="h-8"
       onBlur={(event) => {
         setIsEditing(false);
