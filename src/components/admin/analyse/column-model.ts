@@ -33,18 +33,7 @@ export type DerivedColumn<Row> = {
   subtract: keyof Row;
 };
 
-/** Applique l'opération d'une colonne calculée aux champs d'une ligne. */
-export function computeDerived<Row>(
-  column: DerivedColumn<Row>,
-  read: FieldReader<Row>,
-): number | null {
-  return subtractAmounts(read(column.from), read(column.subtract));
-}
-
 export type Column<Row> = FieldColumn<Row> | DerivedColumn<Row>;
-
-/** Affiché à la place d'une valeur absente. */
-export const EMPTY_CELL = "—";
 
 export function isDerivedColumn<Row>(
   column: Column<Row>,
@@ -52,14 +41,30 @@ export function isDerivedColumn<Row>(
   return "operation" in column;
 }
 
+/**
+ * Applique l'opération d'une colonne calculée aux champs d'une ligne.
+ *
+ * Le `switch` est exhaustif : ajouter une opération au type sans l'implémenter
+ * ici casse la compilation, plutôt que de calculer silencieusement une
+ * différence.
+ */
+export function computeDerived<Row>(
+  column: DerivedColumn<Row>,
+  row: Row,
+): number | null {
+  switch (column.operation) {
+    case "difference":
+      return subtractAmounts(row[column.from], row[column.subtract]);
+    default: {
+      const unhandled: never = column.operation;
+      return unhandled;
+    }
+  }
+}
+
 /** Les seules colonnes qui portent une valeur à lire ou à enregistrer. */
 export function fieldColumns<Row>(columns: Column<Row>[]): FieldColumn<Row>[] {
   return columns.filter(
     (column): column is FieldColumn<Row> => !isDerivedColumn(column),
   );
-}
-
-/** Vrai pour une valeur à rendre comme {@link EMPTY_CELL}. */
-export function isEmptyValue(value: unknown): boolean {
-  return value === null || value === undefined || value === "";
 }

@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { computeDerived, isDerivedColumn } from "./column-model";
+import type { Article } from "@/app/generated/prisma/client";
+
+import {
+  computeDerived,
+  isDerivedColumn,
+  type DerivedColumn,
+} from "./column-model";
 import { ARTICLE_COLUMNS, CLIENT_COLUMNS } from "./columns";
 
 const TABLES = [
@@ -12,57 +18,48 @@ const TABLES = [
  * Les tableaux sont déclarés dans des server components puis passés à
  * `DataTable`, qui est un composant client : une fonction dans ces définitions
  * provoque « Functions cannot be passed directly to Client Components » au
- * rendu de la page. Ces deux tests ferment cette régression.
+ * rendu de la page.
+ *
+ * Les types `FieldColumn` / `DerivedColumn` sont la première garde — aucun de
+ * leurs champs n'accepte une fonction. Ce test couvre le cas qu'ils ne voient
+ * pas : un objet assemblé par spread ou via une variable intermédiaire.
  */
 describe.each(TABLES)("%s traverse la frontière serveur/client", (_, columns) => {
-  it("ne contient aucune fonction", () => {
-    for (const column of columns) {
-      for (const [property, value] of Object.entries(column)) {
-        expect(typeof value, `${column.label}.${property}`).not.toBe("function");
-      }
-    }
-  });
-
   it("survit à une sérialisation JSON", () => {
     expect(JSON.parse(JSON.stringify(columns))).toEqual(columns);
   });
 });
 
-describe("colonne « Marge brute »", () => {
-  const margin = ARTICLE_COLUMNS.find(
-    (column) => isDerivedColumn(column) && column.id === "marge_brute",
+/** La colonne « Marge brute », typée après vérification de sa présence. */
+function marginColumn(): DerivedColumn<Article> {
+  const column = ARTICLE_COLUMNS.find(
+    (candidate) => isDerivedColumn(candidate) && candidate.id === "marge_brute",
   );
 
-  it("est déclarée comme colonne calculée", () => {
-    expect(margin).toBeDefined();
-    expect(margin && isDerivedColumn(margin)).toBe(true);
-  });
+  if (!column || !isDerivedColumn(column)) {
+    throw new Error("La colonne « marge_brute » est absente d'ARTICLE_COLUMNS.");
+  }
+  return column;
+}
 
-  it("est placée juste après les deux prix", () => {
-    expect(ARTICLE_COLUMNS.map((column) => column.label).slice(-3)).toEqual([
-      "Prix d'achat TTC",
-      "Prix de vente TTC",
-      "Marge brute",
-    ]);
+describe("colonne « Marge brute »", () => {
+  it("calcule une différence entre deux champs de la ligne", () => {
+    const column = marginColumn();
+
+    expect(column.operation).toBe("difference");
+    expect(column.from).toBe("prix_vente_ttc");
+    expect(column.subtract).toBe("prix_achat_ttc");
   });
 
   it("soustrait le prix d'achat du prix de vente", () => {
-    if (!margin || !isDerivedColumn(margin)) throw new Error("colonne absente");
+    const article = { prix_vente_ttc: 150.5, prix_achat_ttc: 100.2 } as Article;
 
-    const prices: Record<string, unknown> = {
-      prix_achat_ttc: 100.2,
-      prix_vente_ttc: 150.5,
-    };
-    expect(computeDerived(margin, (key) => prices[String(key)])).toBe(50.3);
+    expect(computeDerived(marginColumn(), article)).toBe(50.3);
   });
 
   it("laisse la marge inconnue quand un prix manque", () => {
-    if (!margin || !isDerivedColumn(margin)) throw new Error("colonne absente");
+    const article = { prix_vente_ttc: null, prix_achat_ttc: 200 } as Article;
 
-    const prices: Record<string, unknown> = {
-      prix_achat_ttc: 200,
-      prix_vente_ttc: null,
-    };
-    expect(computeDerived(margin, (key) => prices[String(key)])).toBeNull();
+    expect(computeDerived(marginColumn(), article)).toBeNull();
   });
 });

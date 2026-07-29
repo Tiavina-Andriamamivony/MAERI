@@ -1,4 +1,5 @@
-const isEmpty = (value: unknown): boolean =>
+/** Vrai pour une valeur absente : `null`, `undefined` ou chaîne vide. */
+export const isEmpty = (value: unknown): boolean =>
   value === null || value === undefined || value === "";
 
 export function normalizeHeader(header: string): string {

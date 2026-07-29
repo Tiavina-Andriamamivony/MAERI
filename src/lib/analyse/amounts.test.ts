@@ -22,7 +22,7 @@ describe("subtractAmounts", () => {
   it("renvoie null quand un montant est absent", () => {
     expect(subtractAmounts(null, 100)).toBeNull();
     expect(subtractAmounts(150, null)).toBeNull();
-    expect(subtractAmounts(undefined, undefined)).toBeNull();
+    expect(subtractAmounts(undefined, 100)).toBeNull();
   });
 
   it("renvoie null quand un montant est vide ou non numérique", () => {

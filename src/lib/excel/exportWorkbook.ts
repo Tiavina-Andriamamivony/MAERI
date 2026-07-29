@@ -17,7 +17,7 @@ export type SheetExport<Row> = {
 /** Valeur exportée d'une cellule : lue depuis la ligne, ou calculée. */
 function cellValue<Row>(column: Column<Row>, row: Row): unknown {
   if (isDerivedColumn(column)) {
-    return computeDerived(column, (key) => row[key]) ?? "";
+    return computeDerived(column, row) ?? "";
   }
   return row[column.key] ?? "";
 }

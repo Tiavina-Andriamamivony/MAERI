@@ -1,13 +1,18 @@
 "use client";
 
 import { useMemo } from "react";
-import { type ColumnDef, type SortingFn } from "@tanstack/react-table";
+import {
+  type ColumnDef,
+  type HeaderContext,
+  type SortingFn,
+} from "@tanstack/react-table";
 import { ArrowUpDownIcon, Trash2Icon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
 import {
   computeDerived,
+  fieldColumns,
   isDerivedColumn,
   type Column,
   type DerivedColumn,
@@ -30,42 +35,40 @@ type UseTableColumnsParams<Row> = {
   labelKey?: keyof Row;
 };
 
-/** En-tête cliquable qui alterne le tri croissant / décroissant. */
-function SortableHeader({
-  label,
-  isSortedAscending,
-  onToggle,
-}: {
-  label: string;
-  isSortedAscending: boolean;
-  onToggle: (descending: boolean) => void;
-}) {
-  return (
-    <Button
-      variant="ghost"
-      size="sm"
-      className="-ml-2.5 h-8 data-sorted:text-foreground"
-      onClick={() => onToggle(isSortedAscending)}
-    >
-      {label}
-      <ArrowUpDownIcon className="ml-1 size-3.5 opacity-60" />
-    </Button>
-  );
+/**
+ * Rendu d'en-tête triable, partagé par les deux types de colonnes : un bouton
+ * qui alterne le tri croissant / décroissant.
+ */
+function sortableHeader<Row>(label: string): ColumnDef<Row>["header"] {
+  return function SortableHeader({ column }: HeaderContext<Row, unknown>) {
+    return (
+      <Button
+        variant="ghost"
+        size="sm"
+        className="-ml-2.5 h-8 data-sorted:text-foreground"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        {label}
+        <ArrowUpDownIcon className="ml-1 size-3.5 opacity-60" />
+      </Button>
+    );
+  };
 }
 
 /**
  * Tri numérique plaçant les valeurs inconnues en dernier, dans les deux sens :
- * une marge non calculable ne doit jamais occuper le haut du classement.
+ * un montant absent ne doit jamais occuper le haut du classement, alors que le
+ * tri par défaut de TanStack le traite comme un zéro.
  */
-function sortNumbersNullsLast<Row>(): SortingFn<Row> {
-  return (rowA, rowB, columnId) => {
-    const a = rowA.getValue<number | null>(columnId);
-    const b = rowB.getValue<number | null>(columnId);
+function sortNumbersNullsLast<Row>(
+  ...[rowA, rowB, columnId]: Parameters<SortingFn<Row>>
+): number {
+  const valueA = rowA.getValue<number | null>(columnId);
+  const valueB = rowB.getValue<number | null>(columnId);
 
-    if (a === null) return b === null ? 0 : 1;
-    if (b === null) return -1;
-    return a - b;
-  };
+  if (valueA === null) return valueB === null ? 0 : 1;
+  if (valueB === null) return -1;
+  return valueA - valueB;
 }
 
 function buildFieldColumn<Row>(
@@ -77,13 +80,10 @@ function buildFieldColumn<Row>(
 
   return {
     accessorKey: column.key as string,
-    header: ({ column: tableColumn }) => (
-      <SortableHeader
-        label={column.label}
-        isSortedAscending={tableColumn.getIsSorted() === "asc"}
-        onToggle={tableColumn.toggleSorting}
-      />
-    ),
+    header: sortableHeader(column.label),
+    // Les montants sont nullables : même politique de tri que les colonnes
+    // calculées, sinon un prix absent remonterait en tête du tri croissant.
+    sortingFn: column.type === "number" ? sortNumbersNullsLast : undefined,
     cell: ({ getValue, row }) => {
       if (!isEditable) return <ReadOnlyCell value={getValue()} />;
 
@@ -107,34 +107,23 @@ function buildFieldColumn<Row>(
 function buildDerivedColumn<Row>(column: DerivedColumn<Row>): ColumnDef<Row> {
   return {
     id: column.id,
-    accessorFn: (row) => computeDerived(column, (key) => row[key]),
-    sortingFn: sortNumbersNullsLast<Row>(),
-    header: ({ column: tableColumn }) => (
-      <SortableHeader
-        label={column.label}
-        isSortedAscending={tableColumn.getIsSorted() === "asc"}
-        onToggle={tableColumn.toggleSorting}
-      />
-    ),
+    accessorFn: (row) => computeDerived(column, row),
+    sortingFn: sortNumbersNullsLast,
+    header: sortableHeader(column.label),
     cell: ({ getValue }) => <ReadOnlyCell value={getValue()} />,
   };
 }
 
+/** Colonne d'action de suppression, ancrée à droite du tableau. */
 function buildActionsColumn<Row extends { id: number }>(
-  columns: Column<Row>[],
+  labelKey: keyof Row | undefined,
   onDelete: UseTableColumnsParams<Row>["onDelete"],
-  labelKey?: keyof Row,
 ): ColumnDef<Row> {
-  const firstField = columns.find(
-    (column): column is FieldColumn<Row> => !isDerivedColumn(column),
-  );
-
   return {
     id: "actions",
     header: () => <span className="sr-only">Actions</span>,
     cell: ({ row }) => {
-      const key = labelKey ?? firstField?.key;
-      const label = key ? String(row.original[key] ?? "") : "";
+      const label = labelKey ? String(row.original[labelKey] ?? "") : "";
       return (
         <div className="flex justify-end">
           <Button
@@ -173,7 +162,8 @@ export function useTableColumns<Row extends { id: number }>({
     );
 
     if (deletable) {
-      definitions.push(buildActionsColumn(columns, onDelete, labelKey));
+      const deletionLabelKey = labelKey ?? fieldColumns(columns)[0]?.key;
+      definitions.push(buildActionsColumn(deletionLabelKey, onDelete));
     }
 
     return definitions;

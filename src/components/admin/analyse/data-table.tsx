@@ -21,8 +21,6 @@ import { useRowDeletion } from "./use-row-deletion";
 import { useRowMutation } from "./use-row-mutation";
 import { useTableColumns } from "./use-table-columns";
 
-export type { Column, DerivedColumn, FieldColumn } from "./column-model";
-
 /**
  * Server actions CRUD du tableau. Chaque action est optionnelle et active la
  * fonctionnalité correspondante :
@@ -64,7 +62,9 @@ export default function DataTable<Row extends { id: number }>({
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [isAdding, setIsAdding] = useState(false);
-  const saveMutation = useRowMutation(actions?.update);
+  // Seul `run` est utilisé ici : le destructurer garde une référence stable et
+  // évite de reconstruire les colonnes du tableau à chaque rendu.
+  const { run: saveRow } = useRowMutation(actions?.update);
   const { pendingIds, remove } = useRowDeletion(actions?.delete);
 
   // Masque les lignes en attente de suppression définitive (fenêtre d'undo).
@@ -75,7 +75,7 @@ export default function DataTable<Row extends { id: number }>({
 
   // Seules les colonnes adossées à un champ sont lues, saisies ou envoyées au
   // serveur : les colonnes calculées n'existent pas en base.
-  const editableColumns = useMemo(() => fieldColumns(columns), [columns]);
+  const persistedColumns = useMemo(() => fieldColumns(columns), [columns]);
 
   // Enregistre une cellule modifiée : on renvoie toute la ligne au serveur
   // (avec la nouvelle valeur), qui la revalide et met le tableau à jour.
@@ -84,15 +84,15 @@ export default function DataTable<Row extends { id: number }>({
       if (String(row[key] ?? "") === newValue) return; // rien n'a changé
 
       const formData = rowToFormData(
-        editableColumns,
+        persistedColumns,
         (columnKey) => row[columnKey]
       );
       formData.set("id", String(row.id));
       formData.set(key as string, newValue);
 
-      saveMutation.run(formData, "Modification enregistrée.");
+      saveRow(formData, "Modification enregistrée.");
     },
-    [editableColumns, saveMutation]
+    [persistedColumns, saveRow]
   );
 
   const tableColumns = useTableColumns({
@@ -130,7 +130,7 @@ export default function DataTable<Row extends { id: number }>({
 
       <DataTableBody
         table={table}
-        columns={editableColumns}
+        columns={persistedColumns}
         columnCount={tableColumns.length}
         emptyMessage={emptyMessage}
         onCreate={actions?.create}

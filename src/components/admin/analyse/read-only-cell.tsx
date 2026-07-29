@@ -1,4 +1,7 @@
-import { EMPTY_CELL, isEmptyValue } from "./column-model";
+import { isEmpty } from "@/lib/excel/converters";
+
+/** Affiché à la place d'une valeur absente. */
+export const EMPTY_CELL = "—";
 
 /**
  * Cellule non modifiable : rend la valeur telle quelle, ou un tiret atténué
@@ -6,7 +9,7 @@ import { EMPTY_CELL, isEmptyValue } from "./column-model";
  * tableaux en lecture seule et les colonnes calculées.
  */
 export default function ReadOnlyCell({ value }: { value: unknown }) {
-  if (isEmptyValue(value)) {
+  if (isEmpty(value)) {
     return <span className="text-muted-foreground">{EMPTY_CELL}</span>;
   }
 
