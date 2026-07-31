@@ -13,14 +13,14 @@ export type ArticleMargin = {
   designation: string;
   /** Marge brute en ariary. */
   margin: number;
-  /** Marge rapportée au prix d'achat, en % (null si prix d'achat nul). */
-  marginRateOnCost: number | null;
+  /** Marge rapportée au prix d'achat, en %. */
+  marginRateOnCost: number;
 };
 
 export type MarginRanking = {
-  /** Articles classés par marge décroissante. */
+  /** Articles classés par taux de marge décroissant. */
   ranked: ArticleMargin[];
-  /** Articles écartés faute d'un des deux prix. */
+  /** Articles écartés : prix manquant, ou prix d'achat nul. */
   excludedCount: number;
 };
 
@@ -49,27 +49,36 @@ export function marginRateOnCost(
 }
 
 /**
- * Classe les articles du plus rentable au moins rentable.
+ * Classe les articles du plus rentable au moins rentable, au **taux de marge**.
  *
- * Un article dont la marge est inconnue (l'un des deux prix manque) n'a pas sa
- * place dans un classement de rentabilité : il est écarté, mais compté pour
- * que l'écran puisse le signaler plutôt que de le passer sous silence.
+ * Le critère est le taux, pas la marge en ariary : un article bon marché qui
+ * double de prix est plus rentable qu'un article coûteux dont la marge absolue
+ * est plus grosse. Sans cela, le classement ne montrerait que les articles
+ * chers.
+ *
+ * Un article dont le taux est inconnu — l'un des deux prix manque, ou le prix
+ * d'achat est nul — n'a pas sa place dans ce classement : il est écarté, mais
+ * compté pour que l'écran puisse le signaler plutôt que de le passer sous
+ * silence.
  */
-export function rankByMargin(articles: PricedArticle[]): MarginRanking {
+export function rankByMarginRate(articles: PricedArticle[]): MarginRanking {
   const ranked: ArticleMargin[] = [];
 
   for (const article of articles) {
     const margin = grossMargin(article);
     if (margin === null) continue;
 
+    const rate = marginRateOnCost(article, margin);
+    if (rate === null) continue;
+
     ranked.push({
       designation: article.designation ?? article.reference,
       margin,
-      marginRateOnCost: marginRateOnCost(article, margin),
+      marginRateOnCost: rate,
     });
   }
 
-  ranked.sort((left, right) => right.margin - left.margin);
+  ranked.sort((left, right) => right.marginRateOnCost - left.marginRateOnCost);
 
   return { ranked, excludedCount: articles.length - ranked.length };
 }

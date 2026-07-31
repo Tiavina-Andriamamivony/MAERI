@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { Article } from "@/app/generated/prisma/client";
+import { grossMargin } from "@/lib/analyse/margin";
 
 import {
   computeDerived,
@@ -14,7 +15,7 @@ const TABLES = [
   ["CLIENT_COLUMNS", CLIENT_COLUMNS],
 ] as const;
 
-/**
+ /**
  * Les tableaux sont déclarés dans des server components puis passés à
  * `DataTable`, qui est un composant client : une fonction dans ces définitions
  * provoque « Functions cannot be passed directly to Client Components » au
@@ -61,5 +62,25 @@ describe("colonne « Marge brute »", () => {
     const article = { prix_vente_ttc: null, prix_achat_ttc: 200 } as Article;
 
     expect(computeDerived(marginColumn(), article)).toBeNull();
+  });
+
+  /**
+   * La colonne du tableau et le graphique de rentabilité calculent la marge
+   * séparément — la colonne de façon déclarative, le graphique via
+   * {@link grossMargin}. Sans cette équivalence, modifier la règle d'un seul
+   * côté afficherait deux montants différents pour le même article.
+   */
+  it("calcule la même marge que le graphique de rentabilité", () => {
+    const articles = [
+      { prix_vente_ttc: 150.5, prix_achat_ttc: 100.2 },
+      { prix_vente_ttc: 60, prix_achat_ttc: 100 },
+      { prix_vente_ttc: 80, prix_achat_ttc: 0 },
+      { prix_vente_ttc: null, prix_achat_ttc: 200 },
+      { prix_vente_ttc: 200, prix_achat_ttc: null },
+    ] as Article[];
+
+    for (const article of articles) {
+      expect(computeDerived(marginColumn(), article)).toBe(grossMargin(article));
+    }
   });
 });

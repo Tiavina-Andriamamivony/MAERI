@@ -3,7 +3,7 @@
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
 
 import type { Article } from "@/app/generated/prisma/client";
-import { rankByMargin, type ArticleMargin } from "@/lib/analyse/margin";
+import { rankByMarginRate, type ArticleMargin } from "@/lib/analyse/margin";
 import {
   Card,
   CardContent,
@@ -22,30 +22,35 @@ import {
 const TOP_COUNT = 10;
 
 const chartConfig = {
-  margin: {
-    label: "Marge brute",
+  marginRateOnCost: {
+    label: "Taux de marge",
     color: "var(--chart-1)",
   },
 } satisfies ChartConfig;
 
-/** Taux affiché au survol, ou mention explicite quand il est incalculable. */
-function formatMarginRate(rate: number | null): string {
-  if (rate === null) return "taux indisponible (prix d'achat nul)";
-  return `${rate.toLocaleString("fr-FR")} % du prix d'achat`;
+/**
+ * Détail affiché au survol : la barre porte un pourcentage, on rappelle donc
+ * la marge en ariary qu'il représente.
+ */
+function formatMarginDetail(entry: ArticleMargin): string {
+  const rate = entry.marginRateOnCost.toLocaleString("fr-FR");
+  const margin = entry.margin.toLocaleString("fr-FR");
+
+  return `${rate} % du prix d'achat — ${margin} Ar de marge brute`;
 }
 
-/** Légende de la carte, incluant les articles écartés faute de prix complet. */
+/** Légende de la carte, incluant les articles qu'on n'a pas pu classer. */
 function describeRanking(shown: number, excludedCount: number): string {
   const lines = [
-    `Les ${shown} plus fortes marges brutes.`,
-    "Au survol : la part que la marge représente du prix d'achat.",
+    `Les ${shown} plus forts taux de marge : la marge rapportée au prix d'achat.`,
+    "Au survol : la marge brute en ariary correspondante.",
   ];
 
   if (excludedCount === 1) {
-    lines.push("1 article sans prix complet n'a pas pu être classé.");
+    lines.push("1 article sans prix d'achat exploitable n'a pas pu être classé.");
   } else if (excludedCount > 1) {
     lines.push(
-      `${excludedCount} articles sans prix complet n'ont pas pu être classés.`,
+      `${excludedCount} articles sans prix d'achat exploitable n'ont pas pu être classés.`,
     );
   }
 
@@ -72,19 +77,23 @@ function MarginBars({ data }: { data: ArticleMargin[] }) {
           content={
             <ChartTooltipContent
               formatter={(_value, _name, item) =>
-                formatMarginRate(item.payload.marginRateOnCost)
+                formatMarginDetail(item.payload)
               }
             />
           }
         />
-        <Bar dataKey="margin" fill="var(--color-margin)" radius={4} />
+        <Bar
+          dataKey="marginRateOnCost"
+          fill="var(--color-marginRateOnCost)"
+          radius={4}
+        />
       </BarChart>
     </ChartContainer>
   );
 }
 
 /**
- * Articles les plus rentables, classés par marge brute. Les données sont
+ * Articles les plus rentables, classés par taux de marge. Les données sont
  * dérivées de la liste fournie : modifier un prix (qui revalide
  * `/admin/analyses`) met le graphique à jour immédiatement.
  */
@@ -93,7 +102,7 @@ export default function ArticlesMarginChart({
 }: {
   articles: Article[];
 }) {
-  const { ranked, excludedCount } = rankByMargin(articles);
+  const { ranked, excludedCount } = rankByMarginRate(articles);
   const top = ranked.slice(0, TOP_COUNT);
 
   if (articles.length === 0) return null;
@@ -104,7 +113,7 @@ export default function ArticlesMarginChart({
         <CardTitle>Articles les plus rentables</CardTitle>
         <CardDescription>
           {top.length === 0
-            ? "Aucun article n'a ses deux prix renseignés : le classement par marge est indisponible."
+            ? "Aucun article n'a un prix d'achat et un prix de vente exploitables : le classement par taux de marge est indisponible."
             : describeRanking(top.length, excludedCount)}
         </CardDescription>
       </CardHeader>
