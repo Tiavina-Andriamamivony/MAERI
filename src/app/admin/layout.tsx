@@ -10,6 +10,7 @@ export default function AdminLayout({
 }>) {
   return (
     <SidebarProvider
+      className="theme-admin"
       style={
         {
           "--header-height": "3.5rem",
