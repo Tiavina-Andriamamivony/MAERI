@@ -5,8 +5,13 @@ import { grossMargin } from "@/lib/analyse/margin";
 
 import {
   computeDerived,
+  fieldColumns,
+  formatFieldValue,
+  inputColumns,
   isDerivedColumn,
+  type Column,
   type DerivedColumn,
+  type FieldColumn,
 } from "./column-model";
 import { ARTICLE_COLUMNS, CLIENT_COLUMNS } from "./columns";
 
@@ -28,6 +33,68 @@ const TABLES = [
 describe.each(TABLES)("%s traverse la frontière serveur/client", (_, columns) => {
   it("survit à une sérialisation JSON", () => {
     expect(JSON.parse(JSON.stringify(columns))).toEqual(columns);
+  });
+});
+
+/** La colonne d'une clé donnée, typée après vérification de sa présence. */
+function fieldColumn<Row>(
+  columns: Column<Row>[],
+  key: keyof Row,
+): FieldColumn<Row> {
+  const column = fieldColumns(columns).find(
+    (candidate) => candidate.key === key,
+  );
+
+  if (!column) {
+    throw new Error(`La colonne « ${String(key)} » est absente du tableau.`);
+  }
+  return column;
+}
+
+/**
+ * Les clés uniques sont attribuées par le serveur : elles doivent rester hors
+ * de la saisie, sinon la ligne d'ajout renverrait une valeur que la server
+ * action ignore — ou, pire, un doublon.
+ */
+describe("clés attribuées automatiquement", () => {
+  it("exclut le code client de la saisie, mais l'affiche verrouillé", () => {
+    const saisies = inputColumns(fieldColumns(CLIENT_COLUMNS)).map(
+      (column) => column.key,
+    );
+
+    expect(saisies).not.toContain("code_client");
+    expect(fieldColumn(CLIENT_COLUMNS, "code_client")).toMatchObject({
+      generated: true,
+      readOnly: true,
+    });
+  });
+
+  it("exclut la référence de la saisie, mais l'affiche verrouillée", () => {
+    const saisies = inputColumns(fieldColumns(ARTICLE_COLUMNS)).map(
+      (column) => column.key,
+    );
+
+    expect(saisies).not.toContain("reference");
+    expect(fieldColumn(ARTICLE_COLUMNS, "reference")).toMatchObject({
+      generated: true,
+      readOnly: true,
+    });
+  });
+});
+
+describe("colonne « Code client »", () => {
+  const column = fieldColumn(CLIENT_COLUMNS, "code_client");
+
+  it("affiche le code sur trois chiffres", () => {
+    expect(formatFieldValue(column, 1)).toBe("001");
+    expect(formatFieldValue(column, 57)).toBe("057");
+    expect(formatFieldValue(column, 1000)).toBe("1000");
+  });
+
+  /** Une cellule vide reste vide : `ReadOnlyCell` affiche alors un tiret. */
+  it("laisse une valeur absente telle quelle", () => {
+    expect(formatFieldValue(column, null)).toBeNull();
+    expect(formatFieldValue(column, undefined)).toBeUndefined();
   });
 });
 

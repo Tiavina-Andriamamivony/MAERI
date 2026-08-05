@@ -16,14 +16,6 @@ const optionalNumber = z
 /** Champ texte obligatoire. */
 const requiredText = z.string().trim().min(1, "Ce champ est requis");
 
-/** Champ nombre obligatoire. */
-const requiredNumber = z
-  .string()
-  .trim()
-  .min(1, "Ce champ est requis")
-  .transform((value) => Number(value))
-  .refine((value) => !Number.isNaN(value), "Nombre invalide");
-
 /** Identifiant de ligne (transmis en champ caché lors d'une modification). */
 const rowId = z.coerce.number().int().positive();
 
@@ -36,10 +28,11 @@ const articleFields = {
   prix_vente_ttc: optionalNumber,
 };
 
-export const createArticleSchema = z.object({
-  reference: requiredText,
-  ...articleFields,
-});
+/**
+ * La `reference` est attribuée par le serveur (« ART-0001 ») et n'est donc pas
+ * saisie : les champs d'une création sont exactement ceux d'une modification.
+ */
+export const createArticleSchema = z.object(articleFields);
 
 export const updateArticleSchema = z.object({
   id: rowId,
@@ -60,10 +53,11 @@ const clientFields = {
   mail: optionalText,
 };
 
-export const createClientSchema = z.object({
-  code_client: requiredNumber,
-  ...clientFields,
-});
+/**
+ * Le `code_client` est attribué par le serveur (« 001 ») et n'est donc pas
+ * saisi : les champs d'une création sont exactement ceux d'une modification.
+ */
+export const createClientSchema = z.object(clientFields);
 
 export const updateClientSchema = z.object({
   id: rowId,

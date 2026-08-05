@@ -5,6 +5,10 @@ import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-guard";
 import { ok, fail, type ActionResult } from "@/lib/action-result";
+import {
+  createWithAllocatedKey,
+  nextClientCode,
+} from "@/lib/analyse/next-code";
 import { firstError } from "@/lib/validations/first-error";
 import {
   createClientSchema,
@@ -25,15 +29,12 @@ export async function createClient(
   const input = createClientSchema.safeParse(Object.fromEntries(formData));
   if (!input.success) return fail(firstError(input.error));
 
-  // Le code client est unique : refuser plutôt que de créer un doublon.
-  const existing = await prisma.client.findUnique({
-    where: { code_client: input.data.code_client },
-  });
-  if (existing) {
-    return fail(`Le code client « ${input.data.code_client} » existe déjà.`);
-  }
-
-  const client = await prisma.client.create({ data: input.data });
+  // Le code client est attribué ici, jamais saisi : on prend le suivant libre.
+  const client = await createWithAllocatedKey(async () =>
+    prisma.client.create({
+      data: { ...input.data, code_client: await nextClientCode() },
+    }),
+  );
 
   revalidatePath("/admin/analyses");
   return ok(client);
