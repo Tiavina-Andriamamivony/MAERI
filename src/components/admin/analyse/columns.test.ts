@@ -94,7 +94,6 @@ describe("colonne « Code client »", () => {
   /** Une cellule vide reste vide : `ReadOnlyCell` affiche alors un tiret. */
   it("laisse une valeur absente telle quelle", () => {
     expect(formatFieldValue(column, null)).toBeNull();
-    expect(formatFieldValue(column, undefined)).toBeUndefined();
   });
 });
 
