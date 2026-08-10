@@ -12,7 +12,7 @@ import { requireAdmin } from "./auth-guard";
 const mockAuth = vi.mocked(auth);
 const mockUpsert = vi.mocked(prisma.user.upsert);
 
-function session(claims: unknown, userId: string | null = "clerk_1") {
+function session(claims?: unknown, userId: string | null = "clerk_1") {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   mockAuth.mockResolvedValue({ userId, sessionClaims: claims } as any);
 }
@@ -53,7 +53,7 @@ describe("requireAdmin", () => {
   });
 
   it("refuse quand le claim metadata est absent du token", async () => {
-    session(undefined);
+    session();
     expect(await requireAdmin().then((r) => r.success)).toBe(false);
   });
 
