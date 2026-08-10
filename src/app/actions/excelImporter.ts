@@ -4,6 +4,7 @@ import { read, utils, type WorkSheet } from "xlsx";
 import { revalidatePath } from "next/cache";
 import { routeSheet } from "@/lib/excel/sheetRouting";
 import { importSheet } from "@/lib/excel/importSheet";
+import { requireAdmin } from "@/lib/auth-guard";
 import type { ImportResult, SheetImportSummary } from "@/types/import";
 
 const ACCEPTED_EXTENSIONS = /\.(xlsx|xls)$/i;
@@ -19,6 +20,9 @@ export async function importExcel(
   formData: FormData
 ): Promise<ImportResult> {
   const sheets: SheetImportSummary[] = [];
+
+  const admin = await requireAdmin();
+  if (!admin.success) return { ok: false, sheets, errors: [admin.error] };
 
   try {
     const file = formData.get("file");

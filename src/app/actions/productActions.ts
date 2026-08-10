@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import prisma from '@/lib/prisma'
 import { uploadImage, deleteImage } from '@/lib/blob'
 import { ActionResult, ok, fail } from '@/lib/action-result'
-import { requireUser } from '@/lib/auth-guard'
+import { requireAdmin } from '@/lib/auth-guard'
 import { firstError } from '@/lib/validations/first-error'
 import { productListPath } from '@/lib/product-types'
 import {
@@ -15,7 +15,7 @@ import {
 import type { Product, Product_type } from '../generated/prisma/client'
 
 export async function createProduct(formData: FormData): Promise<ActionResult<Product>> {
-  const user = await requireUser()
+  const user = await requireAdmin()
   if (!user.success) return user
 
   const input = createProductSchema.safeParse({
@@ -40,7 +40,7 @@ export async function createProduct(formData: FormData): Promise<ActionResult<Pr
 }
 
 export async function updateProduct(formData: FormData): Promise<ActionResult<Product>> {
-  const user = await requireUser()
+  const user = await requireAdmin()
   if (!user.success) return user
 
   const input = updateProductSchema.safeParse({
@@ -77,7 +77,7 @@ export async function updateProduct(formData: FormData): Promise<ActionResult<Pr
 }
 
 export async function deleteProduct(formData: FormData): Promise<ActionResult> {
-  const user = await requireUser()
+  const user = await requireAdmin()
   if (!user.success) return user
 
   const input = productIdSchema.safeParse(formData.get('id'))

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import prisma from "@/lib/prisma";
-import { requireUser } from "@/lib/auth-guard";
+import { assertAdmin, requireAdmin } from "@/lib/auth-guard";
 import { ok, fail, type ActionResult } from "@/lib/action-result";
 import {
   createWithAllocatedKey,
@@ -17,13 +17,14 @@ import {
 import { Client } from "../generated/prisma/client";
 
 export default async function getClients(): Promise<Client[]> {
+  await assertAdmin();
   return await prisma.client.findMany({ orderBy: { code_client: "asc" } });
 }
 
 export async function createClient(
   formData: FormData,
 ): Promise<ActionResult<Client>> {
-  const user = await requireUser();
+  const user = await requireAdmin();
   if (!user.success) return user;
 
   const input = createClientSchema.safeParse(Object.fromEntries(formData));
@@ -43,7 +44,7 @@ export async function createClient(
 export async function updateClient(
   formData: FormData,
 ): Promise<ActionResult<Client>> {
-  const user = await requireUser();
+  const user = await requireAdmin();
   if (!user.success) return user;
 
   const input = updateClientSchema.safeParse(Object.fromEntries(formData));
@@ -57,7 +58,7 @@ export async function updateClient(
 }
 
 export async function deleteClient(id: number): Promise<ActionResult<Client>> {
-  const user = await requireUser();
+  const user = await requireAdmin();
   if (!user.success) return user;
 
   try {

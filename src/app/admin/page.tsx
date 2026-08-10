@@ -1,6 +1,6 @@
-import { auth } from '@clerk/nextjs/server'
+import { notFound } from 'next/navigation'
 
-import prisma from '@/lib/prisma'
+import { requireAdmin } from '@/lib/auth-guard'
 import { getProducts } from '@/app/actions/productActions'
 import { ProductGrid } from '@/components/admin/products'
 import { Suspense } from 'react'
@@ -10,11 +10,8 @@ export const dynamic = 'force-dynamic'
 
 export default async function AdminPage() {
   // Le middleware protège déjà `/admin` ; on revérifie côté serveur par sécurité.
-  const { userId: clerkId, redirectToSignIn } = await auth()
-  if (!clerkId) return redirectToSignIn()
-
-  const user = await prisma.user.findUnique({ where: { clerkId } })
-  if (!user) return redirectToSignIn()
+  const admin = await requireAdmin()
+  if (!admin.success) notFound()
 
   const products = await getProducts()
 
