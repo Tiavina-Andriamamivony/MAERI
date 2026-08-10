@@ -13,7 +13,7 @@ import type { Column } from "./column-model";
  * aucun `HEADER_TO_FIELD` et est donc ignorée à la relecture, ce qui est voulu.
  */
 export const ARTICLE_COLUMNS: Column<Article>[] = [
-  { key: "reference", label: "Référence", readOnly: true },
+  { key: "reference", label: "Référence", readOnly: true, generated: true },
   { key: "designation", label: "Désignation" },
   { key: "categorie", label: "Catégorie" },
   { key: "uom", label: "UOM" },
@@ -29,7 +29,13 @@ export const ARTICLE_COLUMNS: Column<Article>[] = [
 ];
 
 export const CLIENT_COLUMNS: Column<Client>[] = [
-  { key: "code_client", label: "Code client", readOnly: true },
+  {
+    key: "code_client",
+    label: "Code client",
+    readOnly: true,
+    generated: true,
+    format: "clientCode",
+  },
   { key: "client", label: "Client" },
   { key: "adress", label: "Adresse" },
   { key: "province", label: "Province" },

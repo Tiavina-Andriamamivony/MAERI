@@ -5,6 +5,10 @@ import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-guard";
 import { ok, fail, type ActionResult } from "@/lib/action-result";
+import {
+  createWithAllocatedKey,
+  nextArticleReference,
+} from "@/lib/analyse/next-code";
 import { firstError } from "@/lib/validations/first-error";
 import {
   createArticleSchema,
@@ -25,15 +29,12 @@ export async function createArticle(
   const input = createArticleSchema.safeParse(Object.fromEntries(formData));
   if (!input.success) return fail(firstError(input.error));
 
-  // La référence est unique : refuser plutôt que de créer un doublon.
-  const existing = await prisma.article.findUnique({
-    where: { reference: input.data.reference },
-  });
-  if (existing) {
-    return fail(`La référence « ${input.data.reference} » existe déjà.`);
-  }
-
-  const article = await prisma.article.create({ data: input.data });
+  // La référence est attribuée ici, jamais saisie : on prend la suivante libre.
+  const article = await createWithAllocatedKey(async () =>
+    prisma.article.create({
+      data: { ...input.data, reference: await nextArticleReference() },
+    }),
+  );
 
   revalidatePath("/admin/analyses");
   return ok(article);

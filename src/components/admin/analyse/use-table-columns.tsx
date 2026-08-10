@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import {
   computeDerived,
   fieldColumns,
+  formatFieldValue,
   isDerivedColumn,
   type Column,
   type DerivedColumn,
@@ -85,7 +86,9 @@ function buildFieldColumn<Row>(
     // calculées, sinon un prix absent remonterait en tête du tri croissant.
     sortingFn: column.type === "number" ? sortNumbersNullsLast : undefined,
     cell: ({ getValue, row }) => {
-      if (!isEditable) return <ReadOnlyCell value={getValue()} />;
+      if (!isEditable) {
+        return <ReadOnlyCell value={formatFieldValue(column, getValue())} />;
+      }
 
       return (
         <EditableCell
@@ -116,14 +119,18 @@ function buildDerivedColumn<Row>(column: DerivedColumn<Row>): ColumnDef<Row> {
 
 /** Colonne d'action de suppression, ancrée à droite du tableau. */
 function buildActionsColumn<Row extends { id: number }>(
-  labelKey: keyof Row | undefined,
+  labelColumn: FieldColumn<Row> | undefined,
   onDelete: UseTableColumnsParams<Row>["onDelete"],
 ): ColumnDef<Row> {
   return {
     id: "actions",
     header: () => <span className="sr-only">Actions</span>,
     cell: ({ row }) => {
-      const label = labelKey ? String(row.original[labelKey] ?? "") : "";
+      // Libellé mis en forme comme la cellule (« 058 », et non « 58 »).
+      const raw = labelColumn
+        ? formatFieldValue(labelColumn, row.original[labelColumn.key])
+        : null;
+      const label = raw === null || raw === undefined ? "" : String(raw);
       return (
         <div className="flex justify-end">
           <Button
@@ -162,8 +169,11 @@ export function useTableColumns<Row extends { id: number }>({
     );
 
     if (deletable) {
-      const deletionLabelKey = labelKey ?? fieldColumns(columns)[0]?.key;
-      definitions.push(buildActionsColumn(deletionLabelKey, onDelete));
+      const fields = fieldColumns(columns);
+      const labelColumn = labelKey
+        ? fields.find((column) => column.key === labelKey)
+        : fields[0];
+      definitions.push(buildActionsColumn(labelColumn, onDelete));
     }
 
     return definitions;

@@ -1,7 +1,15 @@
 import { subtractAmounts } from "@/lib/analyse/amounts";
+import { formatClientCode } from "@/lib/analyse/codes";
 
 /** Lit la valeur brute d'un champ, d'une ligne existante ou d'une saisie en cours. */
 export type FieldReader<Row> = (key: keyof Row) => unknown;
+
+/**
+ * Mise en forme d'affichage d'un champ. Décrite par un nom (et non par une
+ * fonction) pour que les définitions de colonnes restent sérialisables à
+ * travers la frontière serveur/client — cf. {@link DerivedColumn}.
+ */
+export type FieldFormat = "clientCode";
 
 /** Colonne adossée à un champ de la ligne : affichée, éditable, persistée. */
 export type FieldColumn<Row> = {
@@ -11,6 +19,14 @@ export type FieldColumn<Row> = {
   type?: "number";
   /** Cellule affichée mais non modifiable (ex. clé unique). */
   readOnly?: boolean;
+  /**
+   * Valeur attribuée par le serveur à la création (code client, référence
+   * article) : la colonne n'a donc pas de champ dans la ligne d'ajout, et
+   * n'est pas envoyée à la server action de création.
+   */
+  generated?: boolean;
+  /** Mise en forme à l'affichage et à l'export (défaut : valeur brute). */
+  format?: FieldFormat;
 };
 
 /**
@@ -67,4 +83,35 @@ export function fieldColumns<Row>(columns: Column<Row>[]): FieldColumn<Row>[] {
   return columns.filter(
     (column): column is FieldColumn<Row> => !isDerivedColumn(column),
   );
+}
+
+/** Les colonnes dont la valeur est saisie par l'utilisateur à la création. */
+export function inputColumns<Row>(
+  columns: FieldColumn<Row>[],
+): FieldColumn<Row>[] {
+  return columns.filter((column) => !column.generated);
+}
+
+/**
+ * Applique la mise en forme d'une colonne à la valeur brute d'un champ.
+ *
+ * Le `switch` est exhaustif : ajouter un format au type sans l'implémenter ici
+ * casse la compilation, plutôt que d'afficher silencieusement la valeur brute.
+ */
+export function formatFieldValue<Row>(
+  column: FieldColumn<Row>,
+  value: unknown,
+): unknown {
+  if (column.format === undefined || value === null || value === undefined) {
+    return value;
+  }
+
+  switch (column.format) {
+    case "clientCode":
+      return formatClientCode(Number(value));
+    default: {
+      const unhandled: never = column.format;
+      return unhandled;
+    }
+  }
 }

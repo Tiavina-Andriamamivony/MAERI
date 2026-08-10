@@ -2,6 +2,7 @@ import { utils, write, type WorkBook } from "xlsx";
 
 import {
   computeDerived,
+  formatFieldValue,
   isDerivedColumn,
   type Column,
 } from "@/components/admin/analyse/column-model";
@@ -14,12 +15,15 @@ export type SheetExport<Row> = {
   rows: Row[];
 };
 
-/** Valeur exportée d'une cellule : lue depuis la ligne, ou calculée. */
+/**
+ * Valeur exportée d'une cellule : lue depuis la ligne (mise en forme comme à
+ * l'écran), ou calculée.
+ */
 function cellValue<Row>(column: Column<Row>, row: Row): unknown {
   if (isDerivedColumn(column)) {
     return computeDerived(column, row) ?? "";
   }
-  return row[column.key] ?? "";
+  return formatFieldValue(column, row[column.key]) ?? "";
 }
 
 /**

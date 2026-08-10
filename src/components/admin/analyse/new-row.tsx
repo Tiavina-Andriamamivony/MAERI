@@ -8,12 +8,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TableCell, TableRow } from "@/components/ui/table";
 
-import type { FieldColumn } from "./column-model";
+import { inputColumns, type FieldColumn } from "./column-model";
 import { rowToFormData } from "./row-form-data";
 import { useRowMutation } from "./use-row-mutation";
 
 type NewRowProps<Row> = {
-  /** Colonnes saisissables : les colonnes calculées n'ont pas de champ. */
+  /**
+   * Colonnes saisissables : ni les colonnes calculées, ni celles attribuées par
+   * le serveur (code client, référence) n'ont de champ ici.
+   */
   columns: FieldColumn<Row>[];
   onCreate: (formData: FormData) => Promise<ActionResult<Row>>;
   /** Ferme la ligne d'ajout (après enregistrement ou annulation). */
@@ -26,9 +29,9 @@ type NewRowProps<Row> = {
 };
 
 /**
- * Ligne vierge éditable façon Prisma Studio : toutes les cellules sont des
- * champs (y compris la clé, saisissable pour une création). « Enregistrer »
- * crée la ligne en base, « Annuler » abandonne.
+ * Ligne vierge éditable façon Prisma Studio. « Enregistrer » crée la ligne en
+ * base, « Annuler » abandonne. La clé unique n'est pas saisie : le serveur lui
+ * attribue le prochain identifiant libre.
  */
 export default function NewRow<Row>({
   columns,
@@ -41,9 +44,15 @@ export default function NewRow<Row>({
   const trailingCells = Math.max(0, columnCount - columns.length);
   const [values, setValues] = useState<Record<string, string>>({});
   const { run, isSaving } = useRowMutation(onCreate);
+  const firstInputIndex = columns.findIndex((column) => !column.generated);
 
   async function save() {
-    const formData = rowToFormData(columns, (key) => values[key as string]);
+    // Les colonnes attribuées par le serveur sont exclues de l'envoi : leur
+    // valeur est décidée en base, pas ici.
+    const formData = rowToFormData(
+      inputColumns(columns),
+      (key) => values[key as string],
+    );
     const saved = await run(formData, "Ligne ajoutée.");
     if (saved) onClose();
   }
@@ -51,18 +60,14 @@ export default function NewRow<Row>({
   return (
     <>
       <TableRow>
-        {/*
-          Toutes les colonnes sont éditables ici, y compris la clé (ex.
-          `reference`, marquée `readOnly`) : à la création il faut pouvoir la
-          saisir, alors qu'en édition d'une ligne existante elle reste
-          verrouillée. La validation zod (schéma de création) reste la garde.
-        */}
         {columns.map((column, index) => (
           <NewRowCell
             key={column.key as string}
             column={column}
             value={values[column.key as string] ?? ""}
-            focusOnMount={index === 0}
+            // Le premier champ réellement saisissable reçoit le focus : la clé
+            // attribuée par le serveur n'est pas un champ.
+            focusOnMount={index === firstInputIndex}
             onChange={(newValue) =>
               setValues((current) => ({
                 ...current,
@@ -119,7 +124,10 @@ type NewRowCellProps<Row> = {
   onChange: (newValue: string) => void;
 };
 
-/** Une cellule de la ligne d'ajout : un champ de saisie par colonne. */
+/**
+ * Une cellule de la ligne d'ajout : un champ de saisie, ou une mention
+ * « automatique » pour la clé que le serveur attribuera à l'enregistrement.
+ */
 function NewRowCell<Row>({
   column,
   value,
@@ -132,6 +140,14 @@ function NewRowCell<Row>({
   useEffect(() => {
     if (focusOnMount) inputRef.current?.focus();
   }, [focusOnMount]);
+
+  if (column.generated) {
+    return (
+      <TableCell className="whitespace-nowrap text-muted-foreground italic">
+        Automatique
+      </TableCell>
+    );
+  }
 
   return (
     <TableCell className="whitespace-nowrap">
