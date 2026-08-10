@@ -1,4 +1,4 @@
-import { requireUser } from "@/lib/auth-guard";
+import { requireAdmin } from "@/lib/auth-guard";
 import getArticles from "@/app/actions/articleActions";
 import getClients from "@/app/actions/clientActions";
 import { buildWorkbookBuffer } from "@/lib/excel/exportWorkbook";
@@ -19,7 +19,7 @@ const FILE_NAME = "maeri-analyses.xlsx";
  * authentifiés — le contenu est le même que celui affiché à l'écran.
  */
 export async function GET() {
-  const user = await requireUser();
+  const user = await requireAdmin();
   if (!user.success) {
     return new Response(user.error, { status: 401 });
   }

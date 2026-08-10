@@ -10,7 +10,7 @@ import {
 
 vi.mock('@/lib/prisma', () => ({
   default: {
-    user: { findUnique: vi.fn() },
+    user: { upsert: vi.fn() },
     product: {
       create: vi.fn(),
       update: vi.fn(),
@@ -37,10 +37,13 @@ import { auth } from '@clerk/nextjs/server'
 const UUID = '11111111-1111-1111-1111-111111111111'
 const TYPE = 'CONSTRUCTION_MATERIALS'
 
-/** Connecté + utilisateur Prisma résolu : état nominal pour les mutations. */
+/** Admin connecté + utilisateur Prisma résolu : état nominal pour les mutations. */
 function signedIn(userId = 'user-1') {
-  vi.mocked(auth).mockResolvedValue({ userId: 'clerk-1' } as never)
-  vi.mocked(prisma.user.findUnique).mockResolvedValue({ id: userId } as never)
+  vi.mocked(auth).mockResolvedValue({
+    userId: 'clerk-1',
+    sessionClaims: { metadata: { role: 'admin' } },
+  } as never)
+  vi.mocked(prisma.user.upsert).mockResolvedValue({ id: userId } as never)
 }
 
 function form(fields: Record<string, string | File>): FormData {
@@ -61,15 +64,15 @@ describe('createProduct', () => {
   it('rejette un utilisateur non authentifié', async () => {
     vi.mocked(auth).mockResolvedValue({ userId: null } as never)
     const res = await createProduct(form({ name: 'Roulement', type: TYPE }))
-    expect(res).toEqual({ success: false, error: 'Utilisateur non authentifié' })
+    expect(res).toEqual({ success: false, error: 'Accès refusé' })
     expect(prisma.product.create).not.toHaveBeenCalled()
   })
 
-  it('échoue si utilisateur introuvable', async () => {
-    vi.mocked(auth).mockResolvedValue({ userId: 'clerk-1' } as never)
-    vi.mocked(prisma.user.findUnique).mockResolvedValue(null)
+  it('rejette un utilisateur connecté sans le rôle admin', async () => {
+    vi.mocked(auth).mockResolvedValue({ userId: 'clerk-1', sessionClaims: {} } as never)
     const res = await createProduct(form({ name: 'Roulement', type: TYPE }))
-    expect(res).toEqual({ success: false, error: 'Utilisateur introuvable' })
+    expect(res).toEqual({ success: false, error: 'Accès refusé' })
+    expect(prisma.product.create).not.toHaveBeenCalled()
   })
 
   it('rejette un nom vide', async () => {
@@ -134,7 +137,7 @@ describe('updateProduct', () => {
   it('rejette un utilisateur non authentifié', async () => {
     vi.mocked(auth).mockResolvedValue({ userId: null } as never)
     const res = await updateProduct(form({ id: UUID, name: 'Roulement', type: TYPE }))
-    expect(res).toEqual({ success: false, error: 'Utilisateur non authentifié' })
+    expect(res).toEqual({ success: false, error: 'Accès refusé' })
     expect(prisma.product.update).not.toHaveBeenCalled()
   })
 
@@ -187,7 +190,7 @@ describe('deleteProduct', () => {
   it('rejette un utilisateur non authentifié', async () => {
     vi.mocked(auth).mockResolvedValue({ userId: null } as never)
     const res = await deleteProduct(form({ id: UUID }))
-    expect(res).toEqual({ success: false, error: 'Utilisateur non authentifié' })
+    expect(res).toEqual({ success: false, error: 'Accès refusé' })
     expect(prisma.product.delete).not.toHaveBeenCalled()
   })
 

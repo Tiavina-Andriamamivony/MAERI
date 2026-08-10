@@ -1,8 +1,8 @@
-import { auth } from "@clerk/nextjs/server";
+import { notFound } from "next/navigation";
 
 import getArticles from "@/app/actions/articleActions";
 import getClients from "@/app/actions/clientActions";
-import prisma from "@/lib/prisma";
+import { requireAdmin } from "@/lib/auth-guard";
 import ArticlesTable from "@/components/admin/analyse/articles-table";
 import ClientsTable from "@/components/admin/analyse/clients-table";
 import ImportSection from "@/components/admin/analyse/import-section";
@@ -13,17 +13,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 export const dynamic = "force-dynamic";
 
 export default async function DataAnalysesPage() {
-  const { userId: clerkId, redirectToSignIn } = await auth();
-  if (!clerkId) return redirectToSignIn();
+  // Le middleware protège déjà `/admin` ; on revérifie côté serveur par sécurité.
+  const admin = await requireAdmin();
+  if (!admin.success) notFound();
 
-  // Le contrôle utilisateur et le chargement des données sont indépendants :
-  // on les lance en parallèle pour ne pas bloquer l'affichage sur le lookup.
-  const [user, clients, articles] = await Promise.all([
-    prisma.user.findUnique({ where: { clerkId } }),
-    getClients(),
-    getArticles(),
-  ]);
-  if (!user) return redirectToSignIn();
+  const [clients, articles] = await Promise.all([getClients(), getArticles()]);
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import prisma from "@/lib/prisma";
-import { requireUser } from "@/lib/auth-guard";
+import { assertAdmin, requireAdmin } from "@/lib/auth-guard";
 import { ok, fail, type ActionResult } from "@/lib/action-result";
 import {
   createWithAllocatedKey,
@@ -17,13 +17,14 @@ import {
 import { Article } from "../generated/prisma/client";
 
 export default async function getArticles(): Promise<Article[]> {
+  await assertAdmin();
   return await prisma.article.findMany({ orderBy: { reference: "asc" } });
 }
 
 export async function createArticle(
   formData: FormData,
 ): Promise<ActionResult<Article>> {
-  const user = await requireUser();
+  const user = await requireAdmin();
   if (!user.success) return user;
 
   const input = createArticleSchema.safeParse(Object.fromEntries(formData));
@@ -43,7 +44,7 @@ export async function createArticle(
 export async function updateArticle(
   formData: FormData,
 ): Promise<ActionResult<Article>> {
-  const user = await requireUser();
+  const user = await requireAdmin();
   if (!user.success) return user;
 
   const input = updateArticleSchema.safeParse(Object.fromEntries(formData));
@@ -59,7 +60,7 @@ export async function updateArticle(
 export async function deleteArticle(
   id: number,
 ): Promise<ActionResult<Article>> {
-  const user = await requireUser();
+  const user = await requireAdmin();
   if (!user.success) return user;
 
   try {
