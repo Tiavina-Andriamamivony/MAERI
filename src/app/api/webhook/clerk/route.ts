@@ -6,7 +6,8 @@ import prisma  from '@/lib/prisma'; // Votre instance Prisma Client [8, 9]
 const LOG = '[clerk-webhook]';
 
 export async function POST(req: Request) {
-  const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
+  const WEBHOOK_SECRET =
+    process.env.CLERK_WEBHOOK_SECRET ?? process.env.WEBHOOK_SECRET;
 
   if (!WEBHOOK_SECRET) {
     console.error(`${LOG} CLERK_WEBHOOK_SECRET manquant dans les variables d'environnement`);
