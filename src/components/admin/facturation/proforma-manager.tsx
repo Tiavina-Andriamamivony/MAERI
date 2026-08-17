@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { DownloadIcon, EyeIcon, FilePlusIcon } from "lucide-react";
+import { DownloadIcon, EyeIcon, FilePlusIcon, Trash2Icon } from "lucide-react";
 
 import type { Article, Client } from "@/app/generated/prisma/client";
-import type { ProformaWithItems } from "@/app/actions/proformaActions";
+import {
+  deleteProforma,
+  type ProformaWithItems,
+} from "@/app/actions/proformaActions";
 import { formatAmount, formatDate } from "@/lib/facturation/format";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -26,7 +29,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+import { useRowDeletion } from "../analyse/use-row-deletion";
 import { ProformaForm } from "./proforma-form";
+
+/** Fenêtre d'annulation de la suppression d'un proforma (3 s). */
+const UNDO_DELAY_MS = 3000;
 
 export function ProformaManager({
   proformas,
@@ -40,6 +47,17 @@ export function ProformaManager({
   const router = useRouter();
   const [isCreating, setIsCreating] = useState(false);
   const [viewed, setViewed] = useState<ProformaWithItems | null>(null);
+  // La ligne masquée disparaît immédiatement ; le toast « Annuler » (3 s)
+  // stoppe la suppression tant que la fenêtre n'est pas écoulée. Après
+  // suppression définitive, on recharge la liste depuis le serveur.
+  const handleDeleted = useCallback(() => router.refresh(), [router]);
+  const { pendingIds, remove } = useRowDeletion(deleteProforma, {
+    undoDelayMs: UNDO_DELAY_MS,
+    onDeleted: handleDeleted,
+  });
+  const visibleProformas = proformas.filter(
+    (proforma) => !pendingIds.has(proforma.id),
+  );
 
   function handleSaved() {
     setIsCreating(false);
@@ -55,7 +73,7 @@ export function ProformaManager({
         </Button>
       </div>
 
-      {proformas.length === 0 ? (
+      {visibleProformas.length === 0 ? (
         <div className="flex flex-col items-start gap-2 rounded-lg border border-dashed p-8 text-sm text-muted-foreground">
           <p>Aucun proforma généré pour l'instant.</p>
           <p>
@@ -76,7 +94,7 @@ export function ProformaManager({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {proformas.map((proforma) => (
+              {visibleProformas.map((proforma) => (
                 <TableRow key={proforma.id}>
                   <TableCell className="font-medium">
                     {proforma.pf_num}
@@ -106,6 +124,16 @@ export function ProformaManager({
                         <DownloadIcon />
                         Télécharger PDF
                       </a>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() =>
+                          remove(proforma.id, `Proforma ${proforma.pf_num}`)
+                        }
+                        aria-label={`Supprimer le proforma ${proforma.pf_num}`}
+                      >
+                        <Trash2Icon />
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>

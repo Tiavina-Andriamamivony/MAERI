@@ -39,6 +39,29 @@ export default async function getProformas(): Promise<ProformaWithItems[]> {
 }
 
 /**
+ * Supprime un proforma et son PDF stocké dans Vercel Blob. Les lignes du
+ * proforma sont supprimées en cascade par Prisma (`onDelete: Cascade`).
+ */
+export async function deleteProforma(
+  id: number,
+): Promise<ActionResult<ProformaWithItems>> {
+  const user = await requireAdmin();
+  if (!user.success) return user;
+
+  const existing = await prisma.proforma.findUnique({
+    where: { id },
+    include: { items: true },
+  });
+  if (!existing) return fail("Proforma introuvable.");
+
+  await prisma.proforma.delete({ where: { id } });
+  await deleteImage(existing.pdf_url);
+
+  revalidatePath("/admin/facturation/proforma");
+  return ok(existing);
+}
+
+/**
  * Crée un proforma : revalide le payload (zod), recalcule les totaux côté
  * serveur, rend le PDF, le stocke dans Vercel Blob puis persiste le document
  * et ses lignes. Le proforma est immuable après sauvegarde.

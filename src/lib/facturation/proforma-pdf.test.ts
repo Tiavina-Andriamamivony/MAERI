@@ -94,4 +94,12 @@ describe("renderProformaPdf", () => {
     expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
     expect(pdf.length).toBeGreaterThan(1_000);
   });
+
+  it("embarque le logo et la signature (PDF nettement plus lourd que le texte seul)", async () => {
+    const pdf = await renderProformaPdf(sample);
+
+    // Sans les images, le PDF tient en ~10 Ko : le logo MA-ERI et la signature
+    // (tous deux en PNG dans `public/`) font passer le fichier à ~90 Ko.
+    expect(pdf.length).toBeGreaterThan(50_000);
+  });
 });

@@ -1,6 +1,10 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
+
 import React from "react";
 import {
   Document,
+  Image,
   Page,
   Text,
   View,
@@ -16,6 +20,18 @@ import { arreteProformaLine } from "./amount-in-words";
 import { formatAmount, formatDate, formatPercent, formatQuantity } from "./format";
 import { BANK, COMPANY, LEGAL_NOTICE, TABLE_ROW_COUNT } from "./pdf-assets";
 import { lineTotals, proformaTotals } from "./totals";
+
+/**
+ * Logo et signature, lus depuis `public/` (comme le template Excel).
+ * `proforma-pdf.tsx` n'est importé que côté serveur (route API et server
+ * action), le chargement via `fs` y est donc sûr.
+ */
+const LOGO_IMAGE = readFileSync(
+  path.join(process.cwd(), "public", "MA-ERI.png"),
+);
+const SIGNATURE_IMAGE = readFileSync(
+  path.join(process.cwd(), "public", "maeri signature.png"),
+);
 
 /**
  * Rendu PDF de la facture proforma, fidèle au template Excel
@@ -77,6 +93,16 @@ const styles = StyleSheet.create({
   },
   companyBlock: {
     width: 250,
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
+  logo: {
+    width: 96,
+    height: 96,
+    marginRight: 8,
+  },
+  companyAddress: {
+    flex: 1,
     fontSize: 8.5,
     lineHeight: 1.35,
   },
@@ -141,7 +167,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#999999",
   },
   emptyRow: {
-    height: 18,
+    height: 15,
     flexDirection: "row",
   },
   emptyCell: {
@@ -165,6 +191,12 @@ const styles = StyleSheet.create({
   totalsBlock: {
     width: 230,
   },
+  signature: {
+    width: 141,
+    height: 59,
+    alignSelf: "flex-end",
+    marginBottom: 4,
+  },
   totalsLine: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -185,7 +217,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   footer: {
-    marginTop: 24,
+    marginTop: 16,
     borderTopWidth: 1,
     borderTopColor: "#999999",
     paddingTop: 8,
@@ -325,9 +357,13 @@ export function ProformaDocument({ proforma }: { proforma: ProformaInput }) {
 
         <View style={styles.partyRow}>
           <View style={styles.companyBlock}>
-            {COMPANY.addressLines.map((line) => (
-              <Text key={line}>{line}</Text>
-            ))}
+            {/* eslint-disable-next-line jsx-a11y/alt-text -- Image @react-pdf (PDF), pas d'attribut alt */}
+            <Image src={LOGO_IMAGE} style={styles.logo} />
+            <View style={styles.companyAddress}>
+              {COMPANY.addressLines.map((line) => (
+                <Text key={line}>{line}</Text>
+              ))}
+            </View>
           </View>
           <View style={styles.clientBlock}>
             <Text style={{ fontWeight: "bold" }}>{proforma.client_name}</Text>
@@ -427,6 +463,8 @@ export function ProformaDocument({ proforma }: { proforma: ProformaInput }) {
           </View>
 
           <View style={styles.totalsBlock}>
+            {/* eslint-disable-next-line jsx-a11y/alt-text -- Image @react-pdf (PDF), pas d'attribut alt */}
+            <Image src={SIGNATURE_IMAGE} style={styles.signature} />
             <View style={styles.totalsLine}>
               <Text>Sous-total TTC</Text>
               <Text>{formatAmount(totals.sous_total)}</Text>
