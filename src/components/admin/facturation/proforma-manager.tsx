@@ -85,6 +85,21 @@ function ProformaRow({
 }
 
 /** Tableau des proformas. */
+function ProformaTableHeader() {
+  return (
+    <TableHeader>
+      <TableRow>
+        <TableHead>PF N°</TableHead>
+        <TableHead>Client</TableHead>
+        <TableHead>Date</TableHead>
+        <TableHead className="text-right">Montant total TTC</TableHead>
+        <TableHead className="text-right">Actions</TableHead>
+      </TableRow>
+    </TableHeader>
+  );
+}
+
+/** Tableau des proformas. */
 function ProformaTable({
   proformas,
   onView,
@@ -95,29 +110,19 @@ function ProformaTable({
   onDelete: (id: number, label: string) => void;
 }) {
   return (
-    <div className="rounded-lg border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>PF N°</TableHead>
-            <TableHead>Client</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead className="text-right">Montant total TTC</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {proformas.map((proforma) => (
-            <ProformaRow
-              key={proforma.id}
-              proforma={proforma}
-              onView={onView}
-              onDelete={onDelete}
-            />
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+    <Table className="rounded-lg border">
+      <ProformaTableHeader />
+      <TableBody>
+        {proformas.map((proforma) => (
+          <ProformaRow
+            key={proforma.id}
+            proforma={proforma}
+            onView={onView}
+            onDelete={onDelete}
+          />
+        ))}
+      </TableBody>
+    </Table>
   );
 }
 
@@ -155,17 +160,16 @@ export function ProformaManager({
       return;
     }
     let revoked = false;
-    fetch(viewed.pdf_url)
-      .then((res) => {
+    void (async () => {
+      try {
+        const res = await fetch(viewed.pdf_url);
         if (!res.ok) throw new Error("PDF introuvable");
-        return res.blob();
-      })
-      .then((blob) => {
+        const blob = await res.blob();
         if (!revoked) setViewPdfUrl(URL.createObjectURL(blob));
-      })
-      .catch(() => {
+      } catch {
         if (!revoked) setViewPdfUrl(null);
-      });
+      }
+    })();
     return () => {
       revoked = true;
     };
@@ -236,6 +240,7 @@ export function ProformaManager({
                   src={viewPdfUrl}
                   title={`Proforma ${viewed.pf_num}`}
                   className="h-[70vh] w-full rounded-md border"
+                  sandbox="allow-same-origin allow-scripts"
                 />
               ) : (
                 <div className="flex h-[70vh] items-center justify-center rounded-md border text-muted-foreground">

@@ -377,6 +377,31 @@ function InfoTable({ proforma }: { proforma: ProformaInput }) {
   );
 }
 
+/** En-tête du document (PF N° + date). */
+function DocumentHeader({
+  pfNum,
+  date,
+}: {
+  pfNum: string;
+  date: Date;
+}) {
+  return (
+    <View style={styles.headerRow}>
+      <Text style={styles.companyName}>{COMPANY.name}</Text>
+      <View>
+        <Text style={styles.metaLine}>
+          <Text style={styles.metaLabel}>PF N° : </Text>
+          {pfNum}
+        </Text>
+        <Text style={styles.metaLine}>
+          <Text style={styles.metaLabel}>Date : </Text>
+          {formatDate(date)}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
 /** En-tête du tableau des articles. */
 function ItemsTableHeader() {
   return (
@@ -439,31 +464,22 @@ function ItemsTable({
   tvaActive: boolean;
   tvaRate: number;
 }) {
-  const rows: (ProformaItemInput | null)[] = [
-    ...items,
-    ...Array.from(
-      {
-        length: Math.max(0, TABLE_ROW_COUNT - items.length),
-      },
-      () => null,
-    ),
-  ];
+  const paddingCount = Math.max(0, TABLE_ROW_COUNT - items.length);
 
   return (
     <View style={styles.table}>
       <ItemsTableHeader />
-      {rows.map((item, index) =>
-        item ? (
-          <ItemRow
-            key={`item-${item.article_id ?? item.designation}`}
-            item={item}
-            tvaActive={tvaActive}
-            tvaRate={tvaRate}
-          />
-        ) : (
-          <EmptyItemRow key={`empty-${index}`} index={index} />
-        ),
-      )}
+      {items.map((item) => (
+        <ItemRow
+          key={`item-${item.article_id ?? item.designation}`}
+          item={item}
+          tvaActive={tvaActive}
+          tvaRate={tvaRate}
+        />
+      ))}
+      {Array.from({ length: paddingCount }, (_, i) => (
+        <EmptyItemRow key={`pad-${items.length + i}`} index={i} />
+      ))}
     </View>
   );
 }
@@ -525,20 +541,7 @@ export function ProformaDocument({
     <Document>
       <Page size="A4" style={styles.page}>
         <Text style={styles.title}>PROFORMA</Text>
-
-        <View style={styles.headerRow}>
-          <Text style={styles.companyName}>{COMPANY.name}</Text>
-          <View>
-            <Text style={styles.metaLine}>
-              <Text style={styles.metaLabel}>PF N° : </Text>
-              {proforma.pf_num}
-            </Text>
-            <Text style={styles.metaLine}>
-              <Text style={styles.metaLabel}>Date : </Text>
-              {formatDate(proforma.date)}
-            </Text>
-          </View>
-        </View>
+        <DocumentHeader pfNum={proforma.pf_num} date={proforma.date} />
 
         <PartyBlock proforma={proforma} />
         <InfoTable proforma={proforma} />

@@ -817,6 +817,7 @@ export function ProformaForm({
           src={previewUrl}
           title="Aperçu du proforma"
           className="h-[65vh] w-full rounded-md border"
+          sandbox="allow-same-origin allow-scripts"
         />
         <DialogFooter>
           <Button
