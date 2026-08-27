@@ -8,9 +8,6 @@ function item(overrides: Partial<ProformaItemInput> = {}): ProformaItemInput {
   return {
     article_id: 1,
     designation: "Article test",
-    max_loading: null,
-    pressure: null,
-    dimension: null,
     uom: "PC",
     quantite: 1,
     prix_unitaire: 1000,

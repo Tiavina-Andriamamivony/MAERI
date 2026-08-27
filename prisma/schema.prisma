@@ -88,6 +88,10 @@ model Proforma {
   monnaie           String
   tva_active        Boolean        @default(false)
   tva_rate          Float          @default(20)
+  // Champs modifiables du proforma.
+  cif               String         @default("")
+  delai_livraison   String         @default("")
+  conditions_paiement String       @default("")
   // Totaux recalculés côté serveur à la création.
   sous_total        Float
   remise            Float
@@ -104,11 +108,8 @@ model ProformaItem {
   id           Int      @id @default(autoincrement())
   proforma_id  Int
   proforma     Proforma @relation(fields: [proforma_id], references: [id], onDelete: Cascade)
-  // Copie figée des données article + spécifications techniques.
+  // Copie figée des données article.
   designation  String
-  max_loading  String?
-  pressure     String?
-  dimension    String?
   uom          String?
   quantite     Float
   prix_unitaire Float

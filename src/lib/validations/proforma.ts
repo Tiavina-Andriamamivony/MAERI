@@ -67,9 +67,6 @@ export const proformaItemSchema = z.object({
   // uniquement à l'auto-remplissage, jamais de clé étrangère.
   article_id: z.coerce.number().int().min(1, "Sélectionnez un article"),
   designation: requiredText,
-  max_loading: optionalText,
-  pressure: optionalText,
-  dimension: optionalText,
   uom: optionalText,
   quantite: positiveNumber,
   prix_unitaire: nonNegativeNumber,
@@ -97,6 +94,12 @@ export const proformaSchema = z.object({
   validite_offre: optionalDate,
   terme_paiement: z.coerce.number().int().min(0, "Terme invalide").default(0),
   monnaie: requiredText.default("MGA"),
+  // Champs modifiables du proforma (valeur par défaut depuis le template Excel).
+  // On utilise z.string() plutôt que optionalText car Prisma attend une string,
+  // pas null.
+  cif: z.string().trim().default(""),
+  delai_livraison: z.string().trim().default(""),
+  conditions_paiement: z.string().trim().default(""),
   // TVA globale : appliquée une fois sur le montant net, pas ligne par ligne.
   tva_active: z.boolean().default(false),
   tva_rate: percent.default(20),

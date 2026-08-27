@@ -47,6 +47,7 @@ export function ProformaManager({
   const router = useRouter();
   const [isCreating, setIsCreating] = useState(false);
   const [viewed, setViewed] = useState<ProformaWithItems | null>(null);
+
   // La ligne masquée disparaît immédiatement ; le toast « Annuler » (3 s)
   // stoppe la suppression tant que la fenêtre n'est pas écoulée. Après
   // suppression définitive, on recharge la liste depuis le serveur.
@@ -75,10 +76,10 @@ export function ProformaManager({
 
       {visibleProformas.length === 0 ? (
         <div className="flex flex-col items-start gap-2 rounded-lg border border-dashed p-8 text-sm text-muted-foreground">
-          <p>Aucun proforma généré pour l'instant.</p>
+          <p>Aucun proforma généré pour l&apos;instant.</p>
           <p>
-            Importez d'abord vos clients et articles dans la section Analyses,
-            puis générez votre premier proforma.
+            Importez d&apos;abord vos clients et articles dans la section
+            Analyses, puis générez votre premier proforma.
           </p>
         </div>
       ) : (
@@ -89,7 +90,9 @@ export function ProformaManager({
                 <TableHead>PF N°</TableHead>
                 <TableHead>Client</TableHead>
                 <TableHead>Date</TableHead>
-                <TableHead className="text-right">Montant total TTC</TableHead>
+                <TableHead className="text-right">
+                  Montant total TTC
+                </TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -144,7 +147,7 @@ export function ProformaManager({
       )}
 
       <Dialog open={isCreating} onOpenChange={setIsCreating}>
-        <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+        <DialogContent className="max-h-[90vh] max-w-5xl overflow-y-auto">
           <ProformaForm
             clients={clients}
             articles={articles}

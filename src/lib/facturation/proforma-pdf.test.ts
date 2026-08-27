@@ -26,13 +26,13 @@ const sample: ProformaInput = {
   monnaie: "MGA",
   tva_active: false,
   tva_rate: 20,
+  cif: "0120073/DGI-M du 11/04/25",
+  delai_livraison: "8-9 semaines après confirmation de commande",
+  conditions_paiement: "virement bancaire",
   items: [
     {
       article_id: 1,
-      designation: "PNEU REF: 1800-25 / 40PR / TUBELESS - Marque HONGLI",
-      max_loading: "9750kg-50km/h\n17000kg-10km/h",
-      pressure: "700kpa-50km/h\n950kpa-10km/h",
-      dimension: "diamètre extérieur 1700mm / largeur 515mm",
+      designation: "PNEU REF: 1800-25 / 40PR / TUBELESS - Marque HONGLI - Max loading: 9750kg-50km/h, 17000kg-10km/h - Pressure: 700kpa-50km/h, 950kpa-10km/h - Dimension: diamètre extérieur 1700mm / largeur 515mm",
       uom: "PC",
       quantite: 4,
       prix_unitaire: 12_450_000,

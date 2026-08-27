@@ -16,7 +16,6 @@ export const COMPANY = {
     "NIF : 4012745546",
     "STAT : 68101 31 2024 0 00325",
     "RCS Toamasina 2024 A 00087",
-    "CIF:0120073/DGI-M du 11/04/25",
   ],
 } as const;
 
@@ -40,3 +39,15 @@ export const DEFAULT_TVA_RATE = 20;
 
 /** Monnaie proposée par défaut. */
 export const DEFAULT_CURRENCY = "MGA";
+
+/**
+ * Valeurs par défaut des champs modifiables du proforma,
+ * alignées sur le template Excel (`public/2026 template.xlsx`).
+ */
+export const DEFAULT_CIF = "0120073/DGI-M du 11/04/25";
+
+export const DEFAULT_DELAI_LIVRAISON =
+  "8-9 semaines après confirmation de commande et paiement (le délai pourrait changer suivant des évènements indépendèmment de notre volonté entre autre conditions climatiques, congestion port, guerre, congés fournisseurs, ...)";
+
+export const DEFAULT_CONDITIONS_PAIEMENT =
+  "virement bancaire (à l'ordre de MA-ERI CONSULTING)";

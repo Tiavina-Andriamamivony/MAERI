@@ -109,6 +109,10 @@ export async function createProforma(
         monnaie: data.monnaie,
         tva_active: data.tva_active,
         tva_rate: data.tva_rate,
+        // Champs modifiables.
+        cif: data.cif,
+        delai_livraison: data.delai_livraison,
+        conditions_paiement: data.conditions_paiement,
         // Totaux recalculés côté serveur, jamais repris du client.
         sous_total: totals.sous_total,
         remise: totals.remise,
@@ -121,9 +125,6 @@ export async function createProforma(
           create: data.items.map((item) => ({
             // Copie figée des données article.
             designation: item.designation,
-            max_loading: item.max_loading,
-            pressure: item.pressure,
-            dimension: item.dimension,
             uom: item.uom,
             quantite: item.quantite,
             prix_unitaire: item.prix_unitaire,

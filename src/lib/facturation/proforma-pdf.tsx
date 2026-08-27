@@ -19,6 +19,7 @@ import type {
 import { arreteProformaLine } from "./amount-in-words";
 import { formatAmount, formatDate, formatPercent, formatQuantity } from "./format";
 import { BANK, COMPANY, LEGAL_NOTICE, TABLE_ROW_COUNT } from "./pdf-assets";
+import { DEFAULT_CIF } from "./pdf-assets";
 import { lineTotals, proformaTotals } from "./totals";
 
 /**
@@ -229,28 +230,9 @@ const styles = StyleSheet.create({
   },
 });
 
-/** Lignes « ***… » d'un champ multi-lignes (max loading, pressure). */
-function bulletLines(text: string | null): string[] {
-  return (text ?? "")
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => `***${line}`);
-}
-
-/** Lignes de désignation d'un article, au format du template. */
+/** Lignes de désignation d'un article : la désignation inclut déjà les specs. */
 function designationLines(item: ProformaItemInput): string[] {
-  const lines = [item.designation];
-  if (item.max_loading) {
-    lines.push("Max loading : ", ...bulletLines(item.max_loading));
-  }
-  if (item.pressure) {
-    lines.push("Pressure : ", ...bulletLines(item.pressure));
-  }
-  if (item.dimension) {
-    lines.push(`Dimension : ${item.dimension}`);
-  }
-  return lines;
+  return [item.designation];
 }
 
 function InfoCell({
@@ -363,6 +345,7 @@ export function ProformaDocument({ proforma }: { proforma: ProformaInput }) {
               {COMPANY.addressLines.map((line) => (
                 <Text key={line}>{line}</Text>
               ))}
+              <Text>{`CIF:${proforma.cif || DEFAULT_CIF}`}</Text>
             </View>
           </View>
           <View style={styles.clientBlock}>
@@ -447,14 +430,10 @@ export function ProformaDocument({ proforma }: { proforma: ProformaInput }) {
             <Text>{arreteProformaLine(totals.montant_total)}</Text>
             <Text>{`Prix : Livraison à ${proforma.client_province}`}</Text>
             <Text>
-              Délai de livraison : 8-9 semaines après confirmation de commande et
-              paiement (le délai pourrait changer suivant des évènements
-              indépendèmment de notre volonté entre autre conditions
-              climatiques, congestion port, guerre, congés fournisseurs, ...)
+              {`Délai de livraison : ${proforma.delai_livraison || "8-9 semaines après confirmation de commande et paiement"}`}
             </Text>
             <Text>
-              Condition et mode de paiement : virement bancaire (à l'ordre de
-              MA-ERI CONSULTING)
+              {`Condition et mode de paiement : ${proforma.conditions_paiement || "virement bancaire (à l'ordre de MA-ERI CONSULTING)"}`}
             </Text>
             <Text>
               {`***75% avec la commande (MGA ${formatAmount(totals.montant_total * 0.75)})`}

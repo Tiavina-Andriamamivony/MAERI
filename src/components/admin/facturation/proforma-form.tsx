@@ -9,7 +9,7 @@ import { createProforma } from "@/app/actions/proformaActions";
 import type { Article, Client } from "@/app/generated/prisma/client";
 import { formatClientCode } from "@/lib/analyse/codes";
 import { toDateInputValue } from "@/lib/facturation/format";
-import { DEFAULT_CURRENCY, DEFAULT_TVA_RATE } from "@/lib/facturation/pdf-assets";
+import { DEFAULT_CURRENCY, DEFAULT_TVA_RATE, DEFAULT_CIF } from "@/lib/facturation/pdf-assets";
 import { DEFAULT_PF_NUM } from "@/lib/facturation/unique-keys";
 import {
   PROFORMA_MAX_ITEMS,
@@ -45,9 +45,6 @@ import { Textarea } from "@/components/ui/textarea";
 type ItemValues = {
   article_id?: number;
   designation: string;
-  max_loading: string;
-  pressure: string;
-  dimension: string;
   uom: string;
   quantite: number;
   prix_unitaire: number;
@@ -74,15 +71,15 @@ type ProformaFormValues = {
   monnaie: string;
   tva_active: boolean;
   tva_rate: number;
+  cif: string;
+  delai_livraison: string;
+  conditions_paiement: string;
   items: ItemValues[];
 };
 
 function emptyItem(): ItemValues {
   return {
     designation: "",
-    max_loading: "",
-    pressure: "",
-    dimension: "",
     uom: "",
     quantite: 1,
     prix_unitaire: 0,
@@ -132,6 +129,9 @@ export function ProformaForm({
       monnaie: DEFAULT_CURRENCY,
       tva_active: false,
       tva_rate: DEFAULT_TVA_RATE,
+      cif: DEFAULT_CIF,
+      delai_livraison: "",
+      conditions_paiement: "",
       items: [emptyItem()],
     },
   });
@@ -305,7 +305,23 @@ export function ProformaForm({
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
-          <div className="grid gap-3 sm:grid-cols-3">
+          {/* 1. CIF — ligne dédiée */}
+          <FormField
+            control={form.control}
+            name="cif"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>CIF</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Ex. 0120073/DGI-M du 11/04/25" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* 2. PF N° + Date */}
+          <div className="grid gap-3 sm:grid-cols-2">
             <FormField
               control={form.control}
               name="pf_num"
@@ -332,60 +348,9 @@ export function ProformaForm({
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="monnaie"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Monnaie</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="terme_paiement"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Terme de paiement (jours)</FormLabel>
-                  <FormControl>
-                    <Input type="number" min={0} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="votre_reference"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Votre référence</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="validite_offre"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Date de validité de l'offre</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
           </div>
 
+          {/* 3. Sélection client + détails auto-remplis */}
           <div className="grid gap-3">
             <FormField
               control={form.control}
@@ -450,6 +415,63 @@ export function ProformaForm({
             </div>
           </div>
 
+          {/* 4. Votre référence, validité, terme, monnaie — 2 lignes */}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="votre_reference"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Votre référence</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="validite_offre"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Date de validité de l'offre</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="terme_paiement"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Terme de paiement (jours)</FormLabel>
+                  <FormControl>
+                    <Input type="number" min={0} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="monnaie"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Monnaie</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* 5. Articles + Remise + TVA */}
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-3">
               <p className="text-sm font-medium">Articles</p>
@@ -464,6 +486,18 @@ export function ProformaForm({
                 Ajouter un article
               </Button>
             </div>
+
+            {fields.map((field, index) => (
+              <ItemFields
+                key={field.id}
+                index={index}
+                form={form}
+                articles={articles}
+                canRemove={fields.length > 1}
+                onRemove={() => remove(index)}
+                onArticleChange={handleArticleChange}
+              />
+            ))}
 
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-lg border border-border p-3">
               <FormField
@@ -506,19 +540,37 @@ export function ProformaForm({
                 )}
               />
             </div>
-
-            {fields.map((field, index) => (
-              <ItemFields
-                key={field.id}
-                index={index}
-                form={form}
-                articles={articles}
-                canRemove={fields.length > 1}
-                onRemove={() => remove(index)}
-                onArticleChange={handleArticleChange}
-              />
-            ))}
           </div>
+
+          {/* 6. Délai de livraison */}
+          <FormField
+            control={form.control}
+            name="delai_livraison"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Délai de livraison</FormLabel>
+                <FormControl>
+                  <Textarea rows={3} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* 7. Condition et mode de paiement */}
+          <FormField
+            control={form.control}
+            name="conditions_paiement"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Condition et mode de paiement</FormLabel>
+                <FormControl>
+                  <Textarea rows={3} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
         <DialogFooter>
@@ -662,53 +714,6 @@ function ItemFields({
               <FormLabel>Désignation</FormLabel>
               <FormControl>
                 <Textarea rows={2} {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={control}
-          name={`items.${index}.max_loading`}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Max loading</FormLabel>
-              <FormControl>
-                <Textarea
-                  rows={2}
-                  placeholder="Une ligne par valeur (ex. 9750kg-50km/h)"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={control}
-          name={`items.${index}.pressure`}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Pressure</FormLabel>
-              <FormControl>
-                <Textarea
-                  rows={2}
-                  placeholder="Une ligne par valeur (ex. 700kpa-50km/h)"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={control}
-          name={`items.${index}.dimension`}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Dimension</FormLabel>
-              <FormControl>
-                <Input placeholder="Ex. Ø 1700 mm / largeur 515 mm" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
