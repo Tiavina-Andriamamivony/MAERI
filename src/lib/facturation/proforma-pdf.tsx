@@ -535,8 +535,6 @@ export function ProformaDocument({
     proforma.tva_rate,
   );
 
-  const solde = proforma.terme_paiement;
-
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -551,29 +549,7 @@ export function ProformaDocument({
           tvaRate={proforma.tva_rate}
         />
 
-        <View style={styles.bottomRow}>
-          <View style={styles.arreteBlock}>
-            <Text>
-              {arreteProformaLine(totals.montant_total)}
-            </Text>
-            <Text>
-              {`Prix : Livraison à ${proforma.client_province}`}
-            </Text>
-            <Text>
-              {`Délai de livraison : ${proforma.delai_livraison || "8-9 semaines après confirmation de commande et paiement"}`}
-            </Text>
-            <Text>
-              {`Condition et mode de paiement : ${proforma.conditions_paiement || "virement bancaire (à l'ordre de MA-ERI CONSULTING)"}`}
-            </Text>
-            <Text>
-              {`***75% avec la commande (MGA ${formatAmount(totals.montant_total * 0.75)})`}
-            </Text>
-            <Text>
-              {`***Solde ${solde} jours date de commande`}
-            </Text>
-          </View>
-          <TotalsBlock totals={totals} />
-        </View>
+        <BottomSection proforma={proforma} totals={totals} />
 
         <View style={styles.footer}>
           <Text>{BANK.title}</Text>
@@ -583,6 +559,43 @@ export function ProformaDocument({
         </View>
       </Page>
     </Document>
+  );
+}
+
+/** Bloc des arrêtés + totaux en bas de page. */
+function BottomSection({
+  proforma,
+  totals,
+}: {
+  proforma: ProformaInput;
+  totals: ReturnType<typeof proformaTotals>;
+}) {
+  const solde = proforma.terme_paiement;
+
+  return (
+    <View style={styles.bottomRow}>
+      <View style={styles.arreteBlock}>
+        <Text>
+          {arreteProformaLine(totals.montant_total)}
+        </Text>
+        <Text>
+          {`Prix : Livraison à ${proforma.client_province}`}
+        </Text>
+        <Text>
+          {`Délai de livraison : ${proforma.delai_livraison || "8-9 semaines après confirmation de commande et paiement"}`}
+        </Text>
+        <Text>
+          {`Condition et mode de paiement : ${proforma.conditions_paiement || "virement bancaire (à l'ordre de MA-ERI CONSULTING)"}`}
+        </Text>
+        <Text>
+          {`***75% avec la commande (MGA ${formatAmount(totals.montant_total * 0.75)})`}
+        </Text>
+        <Text>
+          {`***Solde ${solde} jours date de commande`}
+        </Text>
+      </View>
+      <TotalsBlock totals={totals} />
+    </View>
   );
 }
 

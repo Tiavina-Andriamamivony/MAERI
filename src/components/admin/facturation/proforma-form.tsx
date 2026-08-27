@@ -813,11 +813,11 @@ export function ProformaForm({
             sauvegarder. Le document sera figé après enregistrement.
           </DialogDescription>
         </DialogHeader>
-        <iframe
-          src={previewUrl}
+        <object
+          data={previewUrl}
+          type="application/pdf"
           title="Aperçu du proforma"
           className="h-[65vh] w-full rounded-md border"
-          sandbox="allow-same-origin allow-scripts"
         />
         <DialogFooter>
           <Button

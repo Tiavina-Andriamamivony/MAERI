@@ -153,23 +153,24 @@ export function ProformaManager({
   );
 
   // Récupère le PDF depuis l'URL Vercel Blob et crée un blob URL local
-  // pour l'afficher dans l'iframe (évite les restrictions cross-origin).
+  // pour l'afficher dans l'objet (évite les restrictions cross-origin).
   useEffect(() => {
     if (!viewed) {
       setViewPdfUrl(null);
-      return;
+      return undefined;
     }
     let revoked = false;
-    void (async () => {
-      try {
-        const res = await fetch(viewed.pdf_url);
+    fetch(viewed.pdf_url)
+      .then((res) => {
         if (!res.ok) throw new Error("PDF introuvable");
-        const blob = await res.blob();
+        return res.blob();
+      })
+      .then((blob) => {
         if (!revoked) setViewPdfUrl(URL.createObjectURL(blob));
-      } catch {
+      })
+      .catch(() => {
         if (!revoked) setViewPdfUrl(null);
-      }
-    })();
+      });
     return () => {
       revoked = true;
     };
@@ -236,11 +237,11 @@ export function ProformaManager({
                 </DialogDescription>
               </DialogHeader>
               {viewPdfUrl ? (
-                <iframe
-                  src={viewPdfUrl}
+                <object
+                  data={viewPdfUrl}
+                  type="application/pdf"
                   title={`Proforma ${viewed.pf_num}`}
                   className="h-[70vh] w-full rounded-md border"
-                  sandbox="allow-same-origin allow-scripts"
                 />
               ) : (
                 <div className="flex h-[70vh] items-center justify-center rounded-md border text-muted-foreground">
