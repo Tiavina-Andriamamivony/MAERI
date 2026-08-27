@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { DownloadIcon, EyeIcon, FilePlusIcon, Trash2Icon } from "lucide-react";
 
@@ -35,6 +35,92 @@ import { ProformaForm } from "./proforma-form";
 /** Fenêtre d'annulation de la suppression d'un proforma (3 s). */
 const UNDO_DELAY_MS = 3000;
 
+/** Ligne du tableau avec actions (voir, télécharger, supprimer). */
+function ProformaRow({
+  proforma,
+  onView,
+  onDelete,
+}: {
+  proforma: ProformaWithItems;
+  onView: (p: ProformaWithItems) => void;
+  onDelete: (id: number, label: string) => void;
+}) {
+  return (
+    <TableRow>
+      <TableCell className="font-medium">{proforma.pf_num}</TableCell>
+      <TableCell>{proforma.client_name}</TableCell>
+      <TableCell>{formatDate(proforma.date)}</TableCell>
+      <TableCell className="text-right">
+        {formatAmount(proforma.montant_total)}
+      </TableCell>
+      <TableCell>
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onView(proforma)}
+          >
+            <EyeIcon />
+            Voir
+          </Button>
+          <a
+            href={`/api/proforma/${proforma.id}/download`}
+            className={buttonVariants({ variant: "outline", size: "sm" })}
+          >
+            <DownloadIcon />
+            Télécharger PDF
+          </a>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onDelete(proforma.id, `Proforma ${proforma.pf_num}`)}
+            aria-label={`Supprimer le proforma ${proforma.pf_num}`}
+          >
+            <Trash2Icon />
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+}
+
+/** Tableau des proformas. */
+function ProformaTable({
+  proformas,
+  onView,
+  onDelete,
+}: {
+  proformas: ProformaWithItems[];
+  onView: (p: ProformaWithItems) => void;
+  onDelete: (id: number, label: string) => void;
+}) {
+  return (
+    <div className="rounded-lg border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>PF N°</TableHead>
+            <TableHead>Client</TableHead>
+            <TableHead>Date</TableHead>
+            <TableHead className="text-right">Montant total TTC</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {proformas.map((proforma) => (
+            <ProformaRow
+              key={proforma.id}
+              proforma={proforma}
+              onView={onView}
+              onDelete={onDelete}
+            />
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
 export function ProformaManager({
   proformas,
   clients,
@@ -47,6 +133,7 @@ export function ProformaManager({
   const router = useRouter();
   const [isCreating, setIsCreating] = useState(false);
   const [viewed, setViewed] = useState<ProformaWithItems | null>(null);
+  const [viewPdfUrl, setViewPdfUrl] = useState<string | null>(null);
 
   // La ligne masquée disparaît immédiatement ; le toast « Annuler » (3 s)
   // stoppe la suppression tant que la fenêtre n'est pas écoulée. Après
@@ -59,6 +146,30 @@ export function ProformaManager({
   const visibleProformas = proformas.filter(
     (proforma) => !pendingIds.has(proforma.id),
   );
+
+  // Récupère le PDF depuis l'URL Vercel Blob et crée un blob URL local
+  // pour l'afficher dans l'iframe (évite les restrictions cross-origin).
+  useEffect(() => {
+    if (!viewed) {
+      setViewPdfUrl(null);
+      return;
+    }
+    let revoked = false;
+    fetch(viewed.pdf_url)
+      .then((res) => {
+        if (!res.ok) throw new Error("PDF introuvable");
+        return res.blob();
+      })
+      .then((blob) => {
+        if (!revoked) setViewPdfUrl(URL.createObjectURL(blob));
+      })
+      .catch(() => {
+        if (!revoked) setViewPdfUrl(null);
+      });
+    return () => {
+      revoked = true;
+    };
+  }, [viewed]);
 
   function handleSaved() {
     setIsCreating(false);
@@ -83,67 +194,11 @@ export function ProformaManager({
           </p>
         </div>
       ) : (
-        <div className="rounded-lg border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>PF N°</TableHead>
-                <TableHead>Client</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead className="text-right">
-                  Montant total TTC
-                </TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {visibleProformas.map((proforma) => (
-                <TableRow key={proforma.id}>
-                  <TableCell className="font-medium">
-                    {proforma.pf_num}
-                  </TableCell>
-                  <TableCell>{proforma.client_name}</TableCell>
-                  <TableCell>{formatDate(proforma.date)}</TableCell>
-                  <TableCell className="text-right">
-                    {formatAmount(proforma.montant_total)}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setViewed(proforma)}
-                      >
-                        <EyeIcon />
-                        Voir
-                      </Button>
-                      <a
-                        href={`/api/proforma/${proforma.id}/download`}
-                        className={buttonVariants({
-                          variant: "outline",
-                          size: "sm",
-                        })}
-                      >
-                        <DownloadIcon />
-                        Télécharger PDF
-                      </a>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() =>
-                          remove(proforma.id, `Proforma ${proforma.pf_num}`)
-                        }
-                        aria-label={`Supprimer le proforma ${proforma.pf_num}`}
-                      >
-                        <Trash2Icon />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <ProformaTable
+          proformas={visibleProformas}
+          onView={setViewed}
+          onDelete={remove}
+        />
       )}
 
       <Dialog open={isCreating} onOpenChange={setIsCreating}>
@@ -160,7 +215,11 @@ export function ProformaManager({
       <Dialog
         open={viewed !== null}
         onOpenChange={(open) => {
-          if (!open) setViewed(null);
+          if (!open) {
+            if (viewPdfUrl) URL.revokeObjectURL(viewPdfUrl);
+            setViewPdfUrl(null);
+            setViewed(null);
+          }
         }}
       >
         <DialogContent className="max-w-4xl">
@@ -172,11 +231,17 @@ export function ProformaManager({
                   {viewed.client_name} — {formatDate(viewed.date)}
                 </DialogDescription>
               </DialogHeader>
-              <iframe
-                src={viewed.pdf_url}
-                title={`Proforma ${viewed.pf_num}`}
-                className="h-[70vh] w-full rounded-md border"
-              />
+              {viewPdfUrl ? (
+                <iframe
+                  src={viewPdfUrl}
+                  title={`Proforma ${viewed.pf_num}`}
+                  className="h-[70vh] w-full rounded-md border"
+                />
+              ) : (
+                <div className="flex h-[70vh] items-center justify-center rounded-md border text-muted-foreground">
+                  Chargement…
+                </div>
+              )}
               <DialogFooter>
                 <a
                   href={`/api/proforma/${viewed.id}/download`}

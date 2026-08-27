@@ -26,7 +26,7 @@ const percentFormatter = new Intl.NumberFormat("fr-FR", {
  * template Excel.
  */
 function normalizeSpaces(value: string): string {
-  return value.replace(/[\u202f\u00a0]/g, " ");
+  return value.replace(/[\u202f\u00a0]/gu, " ");
 }
 
 export function formatAmount(value: number): string {
@@ -54,7 +54,7 @@ function parseDate(value: Date | string): Date {
 }
 
 /** Formate une date au format « jj/mm/aaaa ». */
-export function formatDate(value: Date | string | null | undefined): string {
+export function formatDate(value: Date | string | null): string {
   if (value === null || value === undefined || value === "") return "";
   const date = parseDate(value);
   if (Number.isNaN(date.getTime())) return "";

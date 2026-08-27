@@ -17,7 +17,12 @@ import type {
   ProformaItemInput,
 } from "@/lib/validations/proforma";
 import { arreteProformaLine } from "./amount-in-words";
-import { formatAmount, formatDate, formatPercent, formatQuantity } from "./format";
+import {
+  formatAmount,
+  formatDate,
+  formatPercent,
+  formatQuantity,
+} from "./format";
 import { BANK, COMPANY, LEGAL_NOTICE, TABLE_ROW_COUNT } from "./pdf-assets";
 import { DEFAULT_CIF } from "./pdf-assets";
 import { lineTotals, proformaTotals } from "./totals";
@@ -273,7 +278,9 @@ function ItemRow({
   const totals = lineTotals(item);
   // TVA globale sur le montant net : la colonne détaille la part de chaque
   // ligne, dont la somme est exactement le « Montant TVA » des totaux.
-  const tvaCell = tvaActive ? formatAmount(totals.net * (tvaRate / 100)) : "–";
+  const tvaCell = tvaActive
+    ? formatAmount(totals.net * (tvaRate / 100))
+    : "–";
 
   return (
     <View style={styles.itemRow}>
@@ -302,19 +309,215 @@ function ItemRow({
   );
 }
 
-export function ProformaDocument({ proforma }: { proforma: ProformaInput }) {
+/** Bloc entreprise + client (logo, adresse, infos). */
+function PartyBlock({ proforma }: { proforma: ProformaInput }) {
+  return (
+    <View style={styles.partyRow}>
+      <View style={styles.companyBlock}>
+        {/* eslint-disable-next-line jsx-a11y/alt-text -- Image @react-pdf (PDF), pas d'attribut alt */}
+        <Image src={LOGO_IMAGE} style={styles.logo} />
+        <View style={styles.companyAddress}>
+          {COMPANY.addressLines.map((line) => (
+            <Text key={line}>{line}</Text>
+          ))}
+          <Text>{`CIF:${proforma.cif || DEFAULT_CIF}`}</Text>
+        </View>
+      </View>
+      <View style={styles.clientBlock}>
+        <Text style={{ fontWeight: "bold" }}>{proforma.client_name}</Text>
+        {proforma.client_address ? (
+          <Text>{proforma.client_address}</Text>
+        ) : null}
+        <Text>{proforma.client_province}</Text>
+        <Text>
+          {proforma.client_nif ? `NIF : ${proforma.client_nif}` : ""}
+        </Text>
+        <Text>
+          {proforma.client_stat ? `STAT : ${proforma.client_stat}` : ""}
+        </Text>
+        <Text>
+          {proforma.client_rcs ? `RCS : ${proforma.client_rcs}` : ""}
+        </Text>
+        {proforma.client_contact || proforma.client_phone ? (
+          <Text>
+            {`ATTN: ${proforma.client_contact ?? ""} / ${proforma.client_phone ?? ""}`}
+          </Text>
+        ) : null}
+        {proforma.client_mail ? (
+          <Text>{`E-Mail: ${proforma.client_mail}`}</Text>
+        ) : null}
+      </View>
+    </View>
+  );
+}
+
+/** Tableau des informations complémentaires (code client, référence, etc.). */
+function InfoTable({ proforma }: { proforma: ProformaInput }) {
+  return (
+    <View style={styles.infoTable}>
+      <View style={styles.infoRow}>
+        <InfoCell label="Code client" />
+        <InfoCell label="Votre référence" />
+        <InfoCell label={"Date de validité de l\u2019offre"} />
+        <InfoCell label="Terme de paiement" />
+        <InfoCell label="Monnaie" last />
+      </View>
+      <View style={styles.infoRow}>
+        <InfoValueCell value={proforma.client_code} />
+        <InfoValueCell value={proforma.votre_reference ?? ""} />
+        <InfoValueCell
+          value={formatDate(proforma.validite_offre ?? null)}
+        />
+        <InfoValueCell
+          value={`${proforma.terme_paiement} jour(s)`}
+        />
+        <InfoValueCell value={proforma.monnaie} last />
+      </View>
+    </View>
+  );
+}
+
+/** En-tête du tableau des articles. */
+function ItemsTableHeader() {
+  return (
+    <View style={styles.tableHeaderRow}>
+      <Text
+        style={[styles.tableHeaderCell, { width: COLUMNS.designation }]}
+      >
+        Désignation
+      </Text>
+      <Text
+        style={[styles.tableHeaderCell, { width: COLUMNS.quantite }]}
+      >
+        Qté
+      </Text>
+      <Text style={[styles.tableHeaderCell, { width: COLUMNS.uom }]}>
+        Unité
+      </Text>
+      <Text style={[styles.tableHeaderCell, { width: COLUMNS.prix }]}>
+        Prix unitaire
+      </Text>
+      <Text
+        style={[styles.tableHeaderCell, { width: COLUMNS.remise }]}
+      >
+        Remise %
+      </Text>
+      <Text style={[styles.tableHeaderCell, { width: COLUMNS.tva }]}>
+        TVA
+      </Text>
+      <Text
+        style={[styles.tableHeaderCell, { width: COLUMNS.montant }]}
+      >
+        Montant net
+      </Text>
+    </View>
+  );
+}
+
+/** Ligne vide de remplissage (conserve la hauteur du tableau). */
+function EmptyItemRow({ index }: { index: number }) {
+  return (
+    <View key={`empty-${index}`} style={styles.emptyRow}>
+      <View style={styles.emptyCell} />
+      <View style={styles.emptyCell} />
+      <View style={styles.emptyCell} />
+      <View style={styles.emptyCell} />
+      <View style={styles.emptyCell} />
+      <View style={styles.emptyCell} />
+      <View style={[styles.emptyCell, { borderRightWidth: 0 }]} />
+    </View>
+  );
+}
+
+/** Tableau des lignes d'articles. */
+function ItemsTable({
+  items,
+  tvaActive,
+  tvaRate,
+}: {
+  items: ProformaItemInput[];
+  tvaActive: boolean;
+  tvaRate: number;
+}) {
+  const rows: (ProformaItemInput | null)[] = [
+    ...items,
+    ...Array.from(
+      {
+        length: Math.max(0, TABLE_ROW_COUNT - items.length),
+      },
+      () => null,
+    ),
+  ];
+
+  return (
+    <View style={styles.table}>
+      <ItemsTableHeader />
+      {rows.map((item, index) =>
+        item ? (
+          <ItemRow
+            key={`item-${item.article_id ?? item.designation}`}
+            item={item}
+            tvaActive={tvaActive}
+            tvaRate={tvaRate}
+          />
+        ) : (
+          <EmptyItemRow key={`empty-${index}`} index={index} />
+        ),
+      )}
+    </View>
+  );
+}
+
+/** Bloc des totaux (sous-total, remise, TVA, total). */
+function TotalsBlock({
+  totals,
+}: {
+  totals: ReturnType<typeof proformaTotals>;
+}) {
+  return (
+    <View style={styles.totalsBlock}>
+      {/* eslint-disable-next-line jsx-a11y/alt-text -- Image @react-pdf (PDF), pas d'attribut alt */}
+      <Image src={SIGNATURE_IMAGE} style={styles.signature} />
+      <TotalsLine label="Sous-total TTC" value={totals.sous_total} />
+      <TotalsLine
+        label={`Remise @ ${formatPercent(totals.remise_pct)}`}
+        value={totals.remise}
+      />
+      <TotalsLine label="Montant net TTC" value={totals.montant_net} />
+      <TotalsLine label="Montant TVA" value={totals.montant_tva} />
+      <View style={styles.totalsLineTotal}>
+        <Text>Montant Total TTC</Text>
+        <Text>{formatAmount(totals.montant_total)}</Text>
+      </View>
+    </View>
+  );
+}
+
+function TotalsLine({
+  label,
+  value,
+}: {
+  label: string;
+  value: number;
+}) {
+  return (
+    <View style={styles.totalsLine}>
+      <Text>{label}</Text>
+      <Text>{formatAmount(value)}</Text>
+    </View>
+  );
+}
+
+export function ProformaDocument({
+  proforma,
+}: {
+  proforma: ProformaInput;
+}) {
   const totals = proformaTotals(
     proforma.items,
     proforma.tva_active,
     proforma.tva_rate,
   );
-
-  // Le template réserve exactement TABLE_ROW_COUNT lignes : les lignes vides
-  // gardent la hauteur du tableau (et donc la position du bloc des totaux).
-  const rows: (ProformaItemInput | null)[] = [
-    ...proforma.items,
-    ...Array.from({ length: Math.max(0, TABLE_ROW_COUNT - proforma.items.length) }, () => null),
-  ];
 
   const solde = proforma.terme_paiement;
 
@@ -337,98 +540,22 @@ export function ProformaDocument({ proforma }: { proforma: ProformaInput }) {
           </View>
         </View>
 
-        <View style={styles.partyRow}>
-          <View style={styles.companyBlock}>
-            {/* eslint-disable-next-line jsx-a11y/alt-text -- Image @react-pdf (PDF), pas d'attribut alt */}
-            <Image src={LOGO_IMAGE} style={styles.logo} />
-            <View style={styles.companyAddress}>
-              {COMPANY.addressLines.map((line) => (
-                <Text key={line}>{line}</Text>
-              ))}
-              <Text>{`CIF:${proforma.cif || DEFAULT_CIF}`}</Text>
-            </View>
-          </View>
-          <View style={styles.clientBlock}>
-            <Text style={{ fontWeight: "bold" }}>{proforma.client_name}</Text>
-            {proforma.client_address ? (
-              <Text>{proforma.client_address}</Text>
-            ) : null}
-            <Text>{proforma.client_province}</Text>
-            <Text>{proforma.client_nif ? `NIF : ${proforma.client_nif}` : ""}</Text>
-            <Text>{proforma.client_stat ? `STAT : ${proforma.client_stat}` : ""}</Text>
-            <Text>{proforma.client_rcs ? `RCS : ${proforma.client_rcs}` : ""}</Text>
-            {proforma.client_contact || proforma.client_phone ? (
-              <Text>
-                {`ATTN: ${proforma.client_contact ?? ""} / ${proforma.client_phone ?? ""}`}
-              </Text>
-            ) : null}
-            {proforma.client_mail ? (
-              <Text>{`E-Mail: ${proforma.client_mail}`}</Text>
-            ) : null}
-          </View>
-        </View>
-
-        <View style={styles.infoTable}>
-          <View style={styles.infoRow}>
-            <InfoCell label="Code client" />
-            <InfoCell label="Votre référence" />
-            <InfoCell label="Date de validité de l'offre" />
-            <InfoCell label="Terme de paiement" />
-            <InfoCell label="Monnaie" last />
-          </View>
-          <View style={styles.infoRow}>
-            <InfoValueCell value={proforma.client_code} />
-            <InfoValueCell value={proforma.votre_reference ?? ""} />
-            <InfoValueCell value={formatDate(proforma.validite_offre)} />
-            <InfoValueCell value={`${proforma.terme_paiement} jour(s)`} />
-            <InfoValueCell value={proforma.monnaie} last />
-          </View>
-        </View>
-
-        <View style={styles.table}>
-          <View style={styles.tableHeaderRow}>
-            <Text style={[styles.tableHeaderCell, { width: COLUMNS.designation }]}>
-              Désignation
-            </Text>
-            <Text style={[styles.tableHeaderCell, { width: COLUMNS.quantite }]}>Qté</Text>
-            <Text style={[styles.tableHeaderCell, { width: COLUMNS.uom }]}>Unité</Text>
-            <Text style={[styles.tableHeaderCell, { width: COLUMNS.prix }]}>
-              Prix unitaire
-            </Text>
-            <Text style={[styles.tableHeaderCell, { width: COLUMNS.remise }]}>
-              Remise %
-            </Text>
-            <Text style={[styles.tableHeaderCell, { width: COLUMNS.tva }]}>TVA</Text>
-            <Text style={[styles.tableHeaderCell, { width: COLUMNS.montant }]}>
-              Montant net
-            </Text>
-          </View>
-          {rows.map((item, index) =>
-            item ? (
-              <ItemRow
-                key={index}
-                item={item}
-                tvaActive={proforma.tva_active}
-                tvaRate={proforma.tva_rate}
-              />
-            ) : (
-              <View key={`empty-${index}`} style={styles.emptyRow}>
-                <View style={styles.emptyCell} />
-                <View style={styles.emptyCell} />
-                <View style={styles.emptyCell} />
-                <View style={styles.emptyCell} />
-                <View style={styles.emptyCell} />
-                <View style={styles.emptyCell} />
-                <View style={[styles.emptyCell, { borderRightWidth: 0 }]} />
-              </View>
-            ),
-          )}
-        </View>
+        <PartyBlock proforma={proforma} />
+        <InfoTable proforma={proforma} />
+        <ItemsTable
+          items={proforma.items}
+          tvaActive={proforma.tva_active}
+          tvaRate={proforma.tva_rate}
+        />
 
         <View style={styles.bottomRow}>
           <View style={styles.arreteBlock}>
-            <Text>{arreteProformaLine(totals.montant_total)}</Text>
-            <Text>{`Prix : Livraison à ${proforma.client_province}`}</Text>
+            <Text>
+              {arreteProformaLine(totals.montant_total)}
+            </Text>
+            <Text>
+              {`Prix : Livraison à ${proforma.client_province}`}
+            </Text>
             <Text>
               {`Délai de livraison : ${proforma.delai_livraison || "8-9 semaines après confirmation de commande et paiement"}`}
             </Text>
@@ -438,33 +565,11 @@ export function ProformaDocument({ proforma }: { proforma: ProformaInput }) {
             <Text>
               {`***75% avec la commande (MGA ${formatAmount(totals.montant_total * 0.75)})`}
             </Text>
-            <Text>{`***Solde ${solde} jours date de commande`}</Text>
+            <Text>
+              {`***Solde ${solde} jours date de commande`}
+            </Text>
           </View>
-
-          <View style={styles.totalsBlock}>
-            {/* eslint-disable-next-line jsx-a11y/alt-text -- Image @react-pdf (PDF), pas d'attribut alt */}
-            <Image src={SIGNATURE_IMAGE} style={styles.signature} />
-            <View style={styles.totalsLine}>
-              <Text>Sous-total TTC</Text>
-              <Text>{formatAmount(totals.sous_total)}</Text>
-            </View>
-            <View style={styles.totalsLine}>
-              <Text>Remise @ {formatPercent(totals.remise_pct)}</Text>
-              <Text>{formatAmount(totals.remise)}</Text>
-            </View>
-            <View style={styles.totalsLine}>
-              <Text>Montant net TTC</Text>
-              <Text>{formatAmount(totals.montant_net)}</Text>
-            </View>
-            <View style={styles.totalsLine}>
-              <Text>Montant TVA</Text>
-              <Text>{formatAmount(totals.montant_tva)}</Text>
-            </View>
-            <View style={styles.totalsLineTotal}>
-              <Text>Montant Total TTC</Text>
-              <Text>{formatAmount(totals.montant_total)}</Text>
-            </View>
-          </View>
+          <TotalsBlock totals={totals} />
         </View>
 
         <View style={styles.footer}>
@@ -479,7 +584,7 @@ export function ProformaDocument({ proforma }: { proforma: ProformaInput }) {
 }
 
 /** Rend le proforma en tampon PDF prêt à être stocké ou servi. */
-export async function renderProformaPdf(
+export function renderProformaPdf(
   proforma: ProformaInput,
 ): Promise<Buffer> {
   return renderToBuffer(<ProformaDocument proforma={proforma} />);

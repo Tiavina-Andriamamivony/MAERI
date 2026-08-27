@@ -47,7 +47,6 @@ describe("formatDate", () => {
 
   it("renvoie une chaîne vide pour une valeur absente", () => {
     expect(formatDate(null)).toBe("");
-    expect(formatDate(undefined)).toBe("");
     expect(formatDate("")).toBe("");
   });
 });
