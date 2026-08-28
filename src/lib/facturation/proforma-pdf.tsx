@@ -570,8 +570,6 @@ function BottomSection({
   proforma: ProformaInput;
   totals: ReturnType<typeof proformaTotals>;
 }) {
-  const solde = proforma.terme_paiement;
-
   return (
     <View style={styles.bottomRow}>
       <View style={styles.arreteBlock}>
@@ -586,12 +584,6 @@ function BottomSection({
         </Text>
         <Text>
           {`Condition et mode de paiement : ${proforma.conditions_paiement || "virement bancaire (à l'ordre de MA-ERI CONSULTING)"}`}
-        </Text>
-        <Text>
-          {`***75% avec la commande (MGA ${formatAmount(totals.montant_total * 0.75)})`}
-        </Text>
-        <Text>
-          {`***Solde ${solde} jours date de commande`}
         </Text>
       </View>
       <TotalsBlock totals={totals} />
