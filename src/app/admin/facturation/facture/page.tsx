@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import getFactures from "@/app/actions/factureActions";
 import getClients from "@/app/actions/clientActions";
 import getArticles from "@/app/actions/articleActions";
+import getProformas from "@/app/actions/proformaActions";
 import { requireAdmin } from "@/lib/auth-guard";
 import { FactureManager } from "@/components/admin/facturation/facture-manager";
 
@@ -20,10 +21,11 @@ export default async function FacturePage({
 
   const params = await searchParams;
 
-  const [factures, clients, articles] = await Promise.all([
+  const [factures, clients, articles, proformas] = await Promise.all([
     getFactures(),
     getClients(),
     getArticles(),
+    getProformas(),
   ]);
 
   // Données pré-remplies depuis un proforma (via query params).
@@ -51,6 +53,7 @@ export default async function FacturePage({
         factures={factures}
         clients={clients}
         articles={articles}
+        proformas={proformas}
         initialData={initialData}
       />
     </div>

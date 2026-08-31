@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import { DownloadIcon, EyeIcon, FilePlusIcon, Trash2Icon } from "lucide-react";
 
 import type { Article, Client } from "@/app/generated/prisma/client";
+import { formatClientCode } from "@/lib/analyse/codes";
 import {
   deleteFacture,
   type FactureWithItems,
 } from "@/app/actions/factureActions";
+import type { ProformaWithItems } from "@/app/actions/proformaActions";
 import { formatAmount, formatDate } from "@/lib/facturation/format";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -32,7 +34,7 @@ import {
 import { useRowDeletion } from "../analyse/use-row-deletion";
 import { FactureForm, type FactureFormValues } from "./facture-form";
 
-/** Fenêtre d&apos;annulation de la suppression d&apos;une facture (3 s). */
+/** Fenêtre d'annulation de la suppression d'une facture (3 s). */
 const UNDO_DELAY_MS = 3000;
 
 /** Ligne du tableau avec actions (voir, télécharger, supprimer). */
@@ -130,21 +132,24 @@ export function FactureManager({
   factures,
   clients,
   articles,
+  proformas,
   initialData,
 }: {
   factures: FactureWithItems[];
   clients: Client[];
   articles: Article[];
-  /** Données pré-remplies (provenant d&apos;un proforma via query param). */
+  proformas: ProformaWithItems[];
+  /** Données pré-remplies (provenant d'un proforma via query param). */
   initialData?: Record<string, string>;
 }) {
   const router = useRouter();
   const [isCreating, setIsCreating] = useState(false);
+  const [isSelectingProforma, setIsSelectingProforma] = useState(false);
   const [viewed, setViewed] = useState<FactureWithItems | null>(null);
   const [viewPdfUrl, setViewPdfUrl] = useState<string | null>(null);
 
   // La ligne masquée disparaît immédiatement ; le toast « Annuler » (3 s)
-  // stoppe la suppression tant que la fenêtre n&apos;est pas écoulée. Après
+  // stoppe la suppression tant que la fenêtre n'est pas écoulée. Après
   // suppression définitive, on recharge la liste depuis le serveur.
   const handleDeleted = useCallback(() => router.refresh(), [router]);
   const { pendingIds, remove } = useRowDeletion(deleteFacture, {
@@ -155,8 +160,8 @@ export function FactureManager({
     (facture) => !pendingIds.has(facture.id),
   );
 
-  // Récupère le PDF depuis l&apos;URL Vercel Blob et crée un blob URL local
-  // pour l&apos;afficher dans l&apos;objet (évite les restrictions cross-origin).
+  // Récupère le PDF depuis l'URL Vercel Blob et crée un blob URL local
+  // pour l'afficher dans l'objet (évite les restrictions cross-origin).
   useEffect(() => {
     if (!viewed) {
       setViewPdfUrl(null);
@@ -179,16 +184,114 @@ export function FactureManager({
     };
   }, [viewed]);
 
-  // Si des données initiales sont fournies (depuis un proforma), ouvrir
-  // automatiquement le formulaire de création.
+  // Si des données initiales sont fournies (depuis un proforma via query param),
+  // ouvrir automatiquement le formulaire de création pré-rempli.
   useEffect(() => {
     if (initialData && Object.keys(initialData).length > 0) {
       setIsCreating(true);
     }
   }, [initialData]);
 
+  /** Transforme un proforma en données initiales pour le formulaire de facture. */
+  function buildInitialDataFromProforma(
+    proforma: ProformaWithItems,
+  ): Partial<FactureFormValues> {
+    const items = proforma.items.map((item) => {
+      const matched = articles.find(
+        (a) =>
+          a.designation?.trim().toLowerCase() ===
+          item.designation.trim().toLowerCase(),
+      );
+      return {
+        article_id: matched?.id ?? 0,
+        designation: item.designation,
+        uom: item.uom ?? "",
+        quantite: item.quantite,
+        prix_unitaire: item.prix_unitaire,
+        remise_pct: item.remise_pct,
+      };
+    });
+
+    const matchedClient = clients.find(
+      (c) =>
+        formatClientCode(c.code_client) === proforma.client_code,
+    );
+
+    return {
+      proforma_id: proforma.id,
+      client_id: matchedClient?.id,
+      client_code: proforma.client_code,
+      client_name: proforma.client_name,
+      client_address: proforma.client_address ?? "",
+      client_province: proforma.client_province,
+      client_nif: proforma.client_nif ?? "",
+      client_stat: proforma.client_stat ?? "",
+      client_rcs: proforma.client_rcs ?? "",
+      client_contact: proforma.client_contact ?? "",
+      client_phone: proforma.client_phone ?? "",
+      client_mail: proforma.client_mail ?? "",
+      votre_reference: proforma.votre_reference ?? "",
+      monnaie: proforma.monnaie,
+      tva_active: proforma.tva_active,
+      tva_rate: proforma.tva_rate,
+      items,
+    };
+  }
+
+  /** Sélection d'un proforma : ouvre le formulaire pré-rempli. */
+  function handleSelectProforma(proforma: ProformaWithItems) {
+    setIsSelectingProforma(false);
+    setProformaInitialData(buildInitialDataFromProforma(proforma));
+    setIsCreating(true);
+  }
+
+  /** Données initiales pour le formulaire (depuis un proforma sélectionné). */
+  const [proformaInitialData, setProformaInitialData] = useState<
+    Partial<FactureFormValues> | undefined
+  >(undefined);
+
+  /** Détermine les données initiales à passer au formulaire. */
+  const formInitialData: Partial<FactureFormValues> | undefined =
+    proformaInitialData ??
+    (initialData
+      ? Object.fromEntries(
+          Object.entries({
+            facture_num: initialData.facture_num,
+            date: initialData.date,
+            client_id: initialData.client_id
+              ? Number(initialData.client_id)
+              : undefined,
+            client_code: initialData.client_code,
+            client_name: initialData.client_name,
+            client_address: initialData.client_address,
+            client_province: initialData.client_province,
+            client_nif: initialData.client_nif,
+            client_stat: initialData.client_stat,
+            client_rcs: initialData.client_rcs,
+            client_contact: initialData.client_contact,
+            client_phone: initialData.client_phone,
+            client_mail: initialData.client_mail,
+            votre_reference: initialData.votre_reference,
+            monnaie: initialData.monnaie,
+            livraison: initialData.livraison,
+            paiement: initialData.paiement,
+            proforma_id: initialData.proforma_id
+              ? Number(initialData.proforma_id)
+              : undefined,
+            tva_active: initialData.tva_active === "true",
+            tva_rate: initialData.tva_rate
+              ? Number(initialData.tva_rate)
+              : undefined,
+            items: initialData.items
+              ? (JSON.parse(initialData.items) as FactureFormValues["items"])
+              : undefined,
+          }).filter(([, value]) => value !== undefined),
+        ) as Partial<FactureFormValues>
+      : undefined);
+
   function handleSaved() {
     setIsCreating(false);
+    setProformaInitialData(undefined);
     // Supprimer les query params injectés par le proforma pour que
     // le useEffect ne réouvre pas le formulaire après le rafraîchissement.
     router.replace(window.location.pathname);
@@ -198,7 +301,7 @@ export function FactureManager({
   return (
     <div className="flex w-full flex-col gap-4">
       <div>
-        <Button onClick={() => setIsCreating(true)}>
+        <Button onClick={() => setIsSelectingProforma(true)}>
           <FilePlusIcon />
           Générer une facture
         </Button>
@@ -208,8 +311,7 @@ export function FactureManager({
         <div className="flex flex-col items-start gap-2 rounded-lg border border-dashed p-8 text-sm text-muted-foreground">
           <p>Aucune facture générée pour l&apos;instant.</p>
           <p>
-            Créez une facture manuellement ou à partir d&apos;un proforma
-            existant.
+            Créez une facture à partir d&apos;un proforma existant.
           </p>
         </div>
       ) : (
@@ -220,52 +322,73 @@ export function FactureManager({
         />
       )}
 
+      {/* Dialogue de sélection de proforma */}
+      <Dialog
+        open={isSelectingProforma}
+        onOpenChange={setIsSelectingProforma}
+      >
+        <DialogContent className="max-h-[80vh] max-w-3xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Sélectionner un proforma</DialogTitle>
+            <DialogDescription>
+              Choisissez le proforma à convertir en facture. Les données
+              client et articles seront pré-remplies dans le formulaire.
+            </DialogDescription>
+          </DialogHeader>
+          {proformas.length === 0 ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              Aucun proforma disponible. Créez d&apos;abord un proforma.
+            </p>
+          ) : (
+            <Table className="rounded-lg border">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>PF N°</TableHead>
+                  <TableHead>Client</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead className="text-right">Montant TTC</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {proformas.map((proforma) => (
+                  <TableRow
+                    key={proforma.id}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSelectProforma(proforma)}
+                  >
+                    <TableCell className="font-medium">
+                      {proforma.pf_num}
+                    </TableCell>
+                    <TableCell>{proforma.client_name}</TableCell>
+                    <TableCell>{formatDate(proforma.date)}</TableCell>
+                    <TableCell className="text-right">
+                      {formatAmount(proforma.montant_total)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Annuler</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialogue de création / édition de facture */}
       <Dialog open={isCreating} onOpenChange={setIsCreating}>
         <DialogContent className="max-h-[90vh] max-w-5xl overflow-y-auto">
           <FactureForm
             clients={clients}
             articles={articles}
-            onCancel={() => setIsCreating(false)}
+            onCancel={() => {
+              setIsCreating(false);
+              setProformaInitialData(undefined);
+            }}
             onSaved={handleSaved}
-            initialData={
-              initialData
-                ? Object.fromEntries(
-                    Object.entries({
-                      facture_num: initialData.facture_num,
-                      date: initialData.date,
-                      client_id: initialData.client_id
-                        ? Number(initialData.client_id)
-                        : undefined,
-                      client_code: initialData.client_code,
-                      client_name: initialData.client_name,
-                      client_address: initialData.client_address,
-                      client_province: initialData.client_province,
-                      client_nif: initialData.client_nif,
-                      client_stat: initialData.client_stat,
-                      client_rcs: initialData.client_rcs,
-                      client_contact: initialData.client_contact,
-                      client_phone: initialData.client_phone,
-                      client_mail: initialData.client_mail,
-                      votre_reference: initialData.votre_reference,
-                      monnaie: initialData.monnaie,
-                      livraison: initialData.livraison,
-                      paiement: initialData.paiement,
-                      proforma_id: initialData.proforma_id
-                        ? Number(initialData.proforma_id)
-                        : undefined,
-                      tva_active: initialData.tva_active === "true",
-                      tva_rate: initialData.tva_rate
-                        ? Number(initialData.tva_rate)
-                        : undefined,
-                      items: initialData.items
-                        ? (JSON.parse(initialData.items) as FactureFormValues["items"])
-                        : undefined,
-                    }).filter(
-                      ([, value]) => value !== undefined,
-                    ),
-                  ) as Partial<FactureFormValues>
-                : undefined
-            }
+            initialData={formInitialData}
           />
         </DialogContent>
       </Dialog>
