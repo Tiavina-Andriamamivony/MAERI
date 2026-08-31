@@ -18,7 +18,6 @@ import {
   DialogClose,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
@@ -194,11 +193,9 @@ function ProformaSelectionDialog({
         ) : (
           <ProformaSelectTable proformas={proformas} onSelect={onSelect} />
         )}
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="outline">Annuler</Button>
-          </DialogClose>
-        </DialogFooter>
+        <DialogClose asChild>
+          <Button variant="outline">Annuler</Button>
+        </DialogClose>
       </DialogContent>
     </Dialog>
   );
@@ -233,7 +230,7 @@ function FactureViewDialog({
             Chargement…
           </div>
         )}
-        <DialogFooter>
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
           <a
             href={`/api/facture/${viewed.id}/download`}
             className={buttonVariants({ variant: "outline" })}
@@ -244,7 +241,7 @@ function FactureViewDialog({
           <DialogClose asChild>
             <Button>Fermer</Button>
           </DialogClose>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );
