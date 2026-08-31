@@ -102,12 +102,69 @@ model Proforma {
   pdf_url           String
   created_at        DateTime       @default(now())
   items             ProformaItem[]
+  factures          Facture[]
 }
 
 model ProformaItem {
   id           Int      @id @default(autoincrement())
   proforma_id  Int
   proforma     Proforma @relation(fields: [proforma_id], references: [id], onDelete: Cascade)
+  // Copie figée des données article.
+  designation  String
+  uom          String?
+  quantite     Float
+  prix_unitaire Float
+  remise_pct   Float    @default(0)
+  montant_net  Float
+}
+
+// Facture définitive. Les données client et article sont COPIÉES au moment de la
+// création (pas de FK) : le document reste figé même si la fiche source évolue.
+// Le PDF rendu est stocké dans Vercel Blob (`pdf_url`) ; la facture est
+// immuable après sauvegarde.
+model Facture {
+  id                Int            @id @default(autoincrement())
+  facture_num       String         @unique
+  date              DateTime
+  // Copie figée des données client.
+  client_code       String
+  client_name       String
+  client_address    String?
+  client_province   String
+  client_nif        String?
+  client_stat       String?
+  client_rcs        String?
+  client_contact    String?
+  client_phone      String?
+  client_mail       String?
+  // Conditions commerciales.
+  votre_reference   String?
+  monnaie           String
+  tva_active        Boolean        @default(false)
+  tva_rate          Float          @default(20)
+  // Champs spécifiques à la facture.
+  date_paiement     DateTime?
+  livraison         String         @default("")
+  paiement          String         @default("")
+  // Référence vers le proforma source (optionnel).
+  proforma_id       Int?
+  proforma          Proforma?      @relation(fields: [proforma_id], references: [id], onDelete: SetNull)
+  // Totaux recalculés côté serveur à la création.
+  sous_total        Float
+  remise            Float
+  montant_net       Float
+  montant_tva       Float
+  montant_total     Float
+  montant_en_lettres String
+  pdf_url           String
+  created_at        DateTime       @default(now())
+  items             FactureItem[]
+}
+
+model FactureItem {
+  id           Int      @id @default(autoincrement())
+  facture_id   Int
+  facture      Facture  @relation(fields: [facture_id], references: [id], onDelete: Cascade)
   // Copie figée des données article.
   designation  String
   uom          String?

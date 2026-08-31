@@ -1,11 +1,14 @@
 import { z } from "zod";
 
 /**
- * Source de vérité du formulaire de proforma : le formulaire, l'aperçu PDF,
- * la préview API et la server action dérivent tous de `proformaSchema`.
+ * Source de vérité du formulaire de facture : le formulaire, l'aperçu PDF,
+ * la préview API et la server action dérivent tous de `factureSchema`.
  *
  * Les noms de champs suivent la convention snake_case des modèles Prisma pour
  * que la persistance n'ait pas besoin de mapping.
+ *
+ * Les primitives de validation (optionalText, requiredText, parseDate, etc.)
+ * sont partagées avec le schéma proforma via `shared-zod.ts`.
  */
 
 import {
@@ -19,9 +22,9 @@ import {
 } from "./shared-zod";
 
 /** Nombre de lignes d'articles réservées par le template. */
-export const PROFORMA_MAX_ITEMS = 11;
+export const FACTURE_MAX_ITEMS = 11;
 
-export const proformaItemSchema = z.object({
+export const factureItemSchema = z.object({
   // Identifiant de l'article source (sélection du formulaire) : il sert
   // uniquement à l'auto-remplissage, jamais de clé étrangère.
   article_id: z.coerce.number().int().min(1, "Sélectionnez un article"),
@@ -32,8 +35,8 @@ export const proformaItemSchema = z.object({
   remise_pct: percent.default(0),
 });
 
-export const proformaSchema = z.object({
-  pf_num: requiredText,
+export const factureSchema = z.object({
+  facture_num: requiredText,
   date: requiredDate,
   // Copie figée des données client (pas de FK) : le document reste inchangé
   // même si la fiche client source est modifiée ensuite.
@@ -50,23 +53,21 @@ export const proformaSchema = z.object({
   client_mail: optionalText,
   // Conditions commerciales.
   votre_reference: optionalText,
-  validite_offre: optionalDate,
-  terme_paiement: z.coerce.number().int().min(0, "Terme invalide").default(0),
   monnaie: requiredText.default("MGA"),
-  // Champs modifiables du proforma (valeur par défaut depuis le template Excel).
-  // On utilise z.string() plutôt que optionalText car Prisma attend une string,
-  // pas null.
-  cif: z.string().trim().default(""),
-  delai_livraison: z.string().trim().default(""),
-  conditions_paiement: z.string().trim().default(""),
+  // Champs spécifiques à la facture.
+  date_paiement: optionalDate,
+  livraison: z.string().trim().default(""),
+  paiement: z.string().trim().default(""),
+  // Référence vers le proforma source (optionnel).
+  proforma_id: z.coerce.number().int().optional().nullable(),
   // TVA globale : appliquée une fois sur le montant net, pas ligne par ligne.
   tva_active: z.boolean().default(false),
   tva_rate: percent.default(20),
   items: z
-    .array(proformaItemSchema)
+    .array(factureItemSchema)
     .min(1, "Ajoutez au moins un article")
-    .max(PROFORMA_MAX_ITEMS, `${PROFORMA_MAX_ITEMS} lignes maximum`),
+    .max(FACTURE_MAX_ITEMS, `${FACTURE_MAX_ITEMS} lignes maximum`),
 });
 
-export type ProformaInput = z.infer<typeof proformaSchema>;
-export type ProformaItemInput = z.infer<typeof proformaItemSchema>;
+export type FactureInput = z.infer<typeof factureSchema>;
+export type FactureItemInput = z.infer<typeof factureItemSchema>;

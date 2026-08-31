@@ -2,13 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { DownloadIcon, EyeIcon, FilePlusIcon, FileSpreadsheetIcon, Trash2Icon } from "lucide-react";
+import { DownloadIcon, EyeIcon, FilePlusIcon, Trash2Icon } from "lucide-react";
 
 import type { Article, Client } from "@/app/generated/prisma/client";
 import {
-  deleteProforma,
-  type ProformaWithItems,
-} from "@/app/actions/proformaActions";
+  deleteFacture,
+  type FactureWithItems,
+} from "@/app/actions/factureActions";
 import { formatAmount, formatDate } from "@/lib/facturation/format";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -30,51 +30,41 @@ import {
 } from "@/components/ui/table";
 
 import { useRowDeletion } from "../analyse/use-row-deletion";
-import { ProformaForm } from "./proforma-form";
+import { FactureForm, type FactureFormValues } from "./facture-form";
 
-/** Fenêtre d'annulation de la suppression d'un proforma (3 s). */
+/** Fenêtre d&apos;annulation de la suppression d&apos;une facture (3 s). */
 const UNDO_DELAY_MS = 3000;
 
-/** Ligne du tableau avec actions (voir, créer facture, télécharger, supprimer). */
-function ProformaRow({
-  proforma,
+/** Ligne du tableau avec actions (voir, télécharger, supprimer). */
+function FactureRow({
+  facture,
   onView,
   onDelete,
-  onCreateFacture,
 }: {
-  proforma: ProformaWithItems;
-  onView: (p: ProformaWithItems) => void;
+  facture: FactureWithItems;
+  onView: (f: FactureWithItems) => void;
   onDelete: (id: number, label: string) => void;
-  onCreateFacture: (p: ProformaWithItems) => void;
 }) {
   return (
     <TableRow>
-      <TableCell className="font-medium">{proforma.pf_num}</TableCell>
-      <TableCell>{proforma.client_name}</TableCell>
-      <TableCell>{formatDate(proforma.date)}</TableCell>
+      <TableCell className="font-medium">{facture.facture_num}</TableCell>
+      <TableCell>{facture.client_name}</TableCell>
+      <TableCell>{formatDate(facture.date)}</TableCell>
       <TableCell className="text-right">
-        {formatAmount(proforma.montant_total)}
+        {formatAmount(facture.montant_total)}
       </TableCell>
       <TableCell>
         <div className="flex justify-end gap-2">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => onView(proforma)}
+            onClick={() => onView(facture)}
           >
             <EyeIcon />
             Voir
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onCreateFacture(proforma)}
-          >
-            <FileSpreadsheetIcon />
-            Facture
-          </Button>
           <a
-            href={`/api/proforma/${proforma.id}/download`}
+            href={`/api/facture/${facture.id}/download`}
             className={buttonVariants({ variant: "outline", size: "sm" })}
           >
             <DownloadIcon />
@@ -83,8 +73,8 @@ function ProformaRow({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => onDelete(proforma.id, `Proforma ${proforma.pf_num}`)}
-            aria-label={`Supprimer le proforma ${proforma.pf_num}`}
+            onClick={() => onDelete(facture.id, `Facture ${facture.facture_num}`)}
+            aria-label={`Supprimer la facture ${facture.facture_num}`}
           >
             <Trash2Icon />
           </Button>
@@ -94,12 +84,12 @@ function ProformaRow({
   );
 }
 
-/** Tableau des proformas. */
-function ProformaTableHeader() {
+/** En-tête du tableau des factures. */
+function FactureTableHeader() {
   return (
     <TableHeader>
       <TableRow>
-        <TableHead>PF N°</TableHead>
+        <TableHead>Facture N°</TableHead>
         <TableHead>Client</TableHead>
         <TableHead>Date</TableHead>
         <TableHead className="text-right">Montant total TTC</TableHead>
@@ -109,29 +99,26 @@ function ProformaTableHeader() {
   );
 }
 
-/** Tableau des proformas. */
-function ProformaTable({
-  proformas,
+/** Tableau des factures. */
+function FactureTable({
+  factures,
   onView,
   onDelete,
-  onCreateFacture,
 }: {
-  proformas: ProformaWithItems[];
-  onView: (p: ProformaWithItems) => void;
+  factures: FactureWithItems[];
+  onView: (f: FactureWithItems) => void;
   onDelete: (id: number, label: string) => void;
-  onCreateFacture: (p: ProformaWithItems) => void;
 }) {
   return (
     <Table className="rounded-lg border">
-      <ProformaTableHeader />
+      <FactureTableHeader />
       <TableBody>
-        {proformas.map((proforma) => (
-          <ProformaRow
-            key={proforma.id}
-            proforma={proforma}
+        {factures.map((facture) => (
+          <FactureRow
+            key={facture.id}
+            facture={facture}
             onView={onView}
             onDelete={onDelete}
-            onCreateFacture={onCreateFacture}
           />
         ))}
       </TableBody>
@@ -139,76 +126,37 @@ function ProformaTable({
   );
 }
 
-export function ProformaManager({
-  proformas,
+export function FactureManager({
+  factures,
   clients,
   articles,
+  initialData,
 }: {
-  proformas: ProformaWithItems[];
+  factures: FactureWithItems[];
   clients: Client[];
   articles: Article[];
+  /** Données pré-remplies (provenant d&apos;un proforma via query param). */
+  initialData?: Record<string, string>;
 }) {
   const router = useRouter();
-
-  /** Redirige vers la page facture avec les données du proforma pré-remplies. */
-  function handleCreateFacture(proforma: ProformaWithItems) {
-    // Résoudre l'identifiant réel de chaque article en le faisant
-    // correspondre par designation dans la liste d'articles disponible.
-    const items = proforma.items.map((item) => {
-      const matched = articles.find(
-        (a) =>
-          a.designation?.trim().toLowerCase() ===
-          item.designation.trim().toLowerCase(),
-      );
-      return {
-        article_id: matched?.id ?? 0,
-        designation: item.designation,
-        uom: item.uom ?? "",
-        quantite: item.quantite,
-        prix_unitaire: item.prix_unitaire,
-        remise_pct: item.remise_pct,
-      };
-    });
-
-    const params = new URLSearchParams({
-      proforma_id: String(proforma.id),
-      client_id: String(proforma.client_code),
-      client_code: proforma.client_code,
-      client_name: proforma.client_name,
-      client_address: proforma.client_address ?? "",
-      client_province: proforma.client_province,
-      client_nif: proforma.client_nif ?? "",
-      client_stat: proforma.client_stat ?? "",
-      client_rcs: proforma.client_rcs ?? "",
-      client_contact: proforma.client_contact ?? "",
-      client_phone: proforma.client_phone ?? "",
-      client_mail: proforma.client_mail ?? "",
-      votre_reference: proforma.votre_reference ?? "",
-      monnaie: proforma.monnaie,
-      tva_active: String(proforma.tva_active),
-      tva_rate: String(proforma.tva_rate),
-      items: JSON.stringify(items),
-    });
-    router.push(`/admin/facturation/facture?${params.toString()}`);
-  }
   const [isCreating, setIsCreating] = useState(false);
-  const [viewed, setViewed] = useState<ProformaWithItems | null>(null);
+  const [viewed, setViewed] = useState<FactureWithItems | null>(null);
   const [viewPdfUrl, setViewPdfUrl] = useState<string | null>(null);
 
   // La ligne masquée disparaît immédiatement ; le toast « Annuler » (3 s)
-  // stoppe la suppression tant que la fenêtre n'est pas écoulée. Après
+  // stoppe la suppression tant que la fenêtre n&apos;est pas écoulée. Après
   // suppression définitive, on recharge la liste depuis le serveur.
   const handleDeleted = useCallback(() => router.refresh(), [router]);
-  const { pendingIds, remove } = useRowDeletion(deleteProforma, {
+  const { pendingIds, remove } = useRowDeletion(deleteFacture, {
     undoDelayMs: UNDO_DELAY_MS,
     onDeleted: handleDeleted,
   });
-  const visibleProformas = proformas.filter(
-    (proforma) => !pendingIds.has(proforma.id),
+  const visibleFactures = factures.filter(
+    (facture) => !pendingIds.has(facture.id),
   );
 
-  // Récupère le PDF depuis l'URL Vercel Blob et crée un blob URL local
-  // pour l'afficher dans l'objet (évite les restrictions cross-origin).
+  // Récupère le PDF depuis l&apos;URL Vercel Blob et crée un blob URL local
+  // pour l&apos;afficher dans l&apos;objet (évite les restrictions cross-origin).
   useEffect(() => {
     if (!viewed) {
       setViewPdfUrl(null);
@@ -231,8 +179,19 @@ export function ProformaManager({
     };
   }, [viewed]);
 
+  // Si des données initiales sont fournies (depuis un proforma), ouvrir
+  // automatiquement le formulaire de création.
+  useEffect(() => {
+    if (initialData && Object.keys(initialData).length > 0) {
+      setIsCreating(true);
+    }
+  }, [initialData]);
+
   function handleSaved() {
     setIsCreating(false);
+    // Supprimer les query params injectés par le proforma pour que
+    // le useEffect ne réouvre pas le formulaire après le rafraîchissement.
+    router.replace(window.location.pathname);
     router.refresh();
   }
 
@@ -241,34 +200,72 @@ export function ProformaManager({
       <div>
         <Button onClick={() => setIsCreating(true)}>
           <FilePlusIcon />
-          Générer un proforma
+          Générer une facture
         </Button>
       </div>
 
-      {visibleProformas.length === 0 ? (
+      {visibleFactures.length === 0 ? (
         <div className="flex flex-col items-start gap-2 rounded-lg border border-dashed p-8 text-sm text-muted-foreground">
-          <p>Aucun proforma généré pour l&apos;instant.</p>
+          <p>Aucune facture générée pour l&apos;instant.</p>
           <p>
-            Importez d&apos;abord vos clients et articles dans la section
-            Analyses, puis générez votre premier proforma.
+            Créez une facture manuellement ou à partir d&apos;un proforma
+            existant.
           </p>
         </div>
       ) : (
-        <ProformaTable
-          proformas={visibleProformas}
+        <FactureTable
+          factures={visibleFactures}
           onView={setViewed}
           onDelete={remove}
-          onCreateFacture={handleCreateFacture}
         />
       )}
 
       <Dialog open={isCreating} onOpenChange={setIsCreating}>
         <DialogContent className="max-h-[90vh] max-w-5xl overflow-y-auto">
-          <ProformaForm
+          <FactureForm
             clients={clients}
             articles={articles}
             onCancel={() => setIsCreating(false)}
             onSaved={handleSaved}
+            initialData={
+              initialData
+                ? Object.fromEntries(
+                    Object.entries({
+                      facture_num: initialData.facture_num,
+                      date: initialData.date,
+                      client_id: initialData.client_id
+                        ? Number(initialData.client_id)
+                        : undefined,
+                      client_code: initialData.client_code,
+                      client_name: initialData.client_name,
+                      client_address: initialData.client_address,
+                      client_province: initialData.client_province,
+                      client_nif: initialData.client_nif,
+                      client_stat: initialData.client_stat,
+                      client_rcs: initialData.client_rcs,
+                      client_contact: initialData.client_contact,
+                      client_phone: initialData.client_phone,
+                      client_mail: initialData.client_mail,
+                      votre_reference: initialData.votre_reference,
+                      monnaie: initialData.monnaie,
+                      livraison: initialData.livraison,
+                      paiement: initialData.paiement,
+                      proforma_id: initialData.proforma_id
+                        ? Number(initialData.proforma_id)
+                        : undefined,
+                      tva_active: initialData.tva_active === "true",
+                      tva_rate: initialData.tva_rate
+                        ? Number(initialData.tva_rate)
+                        : undefined,
+                      items: initialData.items
+                        ? (JSON.parse(initialData.items) as FactureFormValues["items"])
+                        : undefined,
+                    }).filter(
+                      ([, value]) => value !== undefined,
+                    ),
+                  ) as Partial<FactureFormValues>
+                : undefined
+            }
           />
         </DialogContent>
       </Dialog>
@@ -287,7 +284,7 @@ export function ProformaManager({
           {viewed && (
             <>
               <DialogHeader>
-                <DialogTitle>Proforma {viewed.pf_num}</DialogTitle>
+                <DialogTitle>Facture {viewed.facture_num}</DialogTitle>
                 <DialogDescription>
                   {viewed.client_name} — {formatDate(viewed.date)}
                 </DialogDescription>
@@ -296,7 +293,7 @@ export function ProformaManager({
                 <object
                   data={viewPdfUrl}
                   type="application/pdf"
-                  title={`Proforma ${viewed.pf_num}`}
+                  title={`Facture ${viewed.facture_num}`}
                   className="h-[70vh] w-full rounded-md border"
                 />
               ) : (
@@ -306,7 +303,7 @@ export function ProformaManager({
               )}
               <DialogFooter>
                 <a
-                  href={`/api/proforma/${viewed.id}/download`}
+                  href={`/api/facture/${viewed.id}/download`}
                   className={buttonVariants({ variant: "outline" })}
                 >
                   <DownloadIcon />
