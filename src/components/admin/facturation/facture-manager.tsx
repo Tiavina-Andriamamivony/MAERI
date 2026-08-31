@@ -166,87 +166,6 @@ function ProformaSelectTable({
   );
 }
 
-/** Dialogue de sélection de proforma (liste cliquable). */
-function ProformaSelectionDialog({
-  open,
-  onOpenChange,
-  proformas,
-  onSelect,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  proformas: ProformaWithItems[];
-  onSelect: (proforma: ProformaWithItems) => void;
-}) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[80vh] max-w-3xl overflow-y-auto">
-        <DialogTitle>Sélectionner un proforma</DialogTitle>
-        <DialogDescription>
-          Choisissez le proforma à convertir en facture. Les données
-          client et articles seront pré-remplies dans le formulaire.
-        </DialogDescription>
-        {proformas.length === 0 ? (
-          <p className="py-6 text-center text-sm text-muted-foreground">
-            Aucun proforma disponible. Créez d&apos;abord un proforma.
-          </p>
-        ) : (
-          <ProformaSelectTable proformas={proformas} onSelect={onSelect} />
-        )}
-        <DialogClose asChild>
-          <Button variant="outline">Annuler</Button>
-        </DialogClose>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-/** Dialogue de visualisation d'une facture existante. */
-function FactureViewDialog({
-  viewed,
-  viewPdfUrl,
-  onOpenChange,
-}: {
-  viewed: FactureWithItems;
-  viewPdfUrl: string | null;
-  onOpenChange: (open: boolean) => void;
-}) {
-  return (
-    <Dialog open={viewed !== null} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl">
-        <DialogTitle>Facture {viewed.facture_num}</DialogTitle>
-        <DialogDescription>
-          {viewed.client_name} — {formatDate(viewed.date)}
-        </DialogDescription>
-        {viewPdfUrl ? (
-          <object
-            data={viewPdfUrl}
-            type="application/pdf"
-            title={`Facture ${viewed.facture_num}`}
-            className="h-[70vh] w-full rounded-md border"
-          />
-        ) : (
-          <div className="flex h-[70vh] items-center justify-center rounded-md border text-muted-foreground">
-            Chargement…
-          </div>
-        )}
-        <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
-          <a
-            href={`/api/facture/${viewed.id}/download`}
-            className={buttonVariants({ variant: "outline" })}
-          >
-            <DownloadIcon />
-            Télécharger PDF
-          </a>
-          <DialogClose asChild>
-            <Button>Fermer</Button>
-          </DialogClose>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 /**
  * Transforme un proforma en données initiales pour le formulaire de facture.
  * Résout les identifiants client et article à partir des listes disponibles.
@@ -427,6 +346,14 @@ export function FactureManager({
     setProformaInitialData(() => undefined);
   };
 
+  const handleViewPdfClose = (open: boolean) => {
+    if (!open) {
+      if (viewPdfUrl) URL.revokeObjectURL(viewPdfUrl);
+      setViewPdfUrl(null);
+      setViewed(null);
+    }
+  };
+
   return (
     <div className="flex w-full flex-col gap-4">
       <Button onClick={() => setIsSelectingProforma(true)}>
@@ -449,12 +376,25 @@ export function FactureManager({
         />
       )}
 
-      <ProformaSelectionDialog
-        open={isSelectingProforma}
-        onOpenChange={setIsSelectingProforma}
-        proformas={proformas}
-        onSelect={handleSelectProforma}
-      />
+      <Dialog open={isSelectingProforma} onOpenChange={setIsSelectingProforma}>
+        <DialogContent className="max-h-[80vh] max-w-3xl overflow-y-auto">
+          <DialogTitle>Sélectionner un proforma</DialogTitle>
+          <DialogDescription>
+            Choisissez le proforma à convertir en facture. Les données
+            client et articles seront pré-remplies dans le formulaire.
+          </DialogDescription>
+          {proformas.length === 0 ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              Aucun proforma disponible. Créez d&apos;abord un proforma.
+            </p>
+          ) : (
+            <ProformaSelectTable proformas={proformas} onSelect={handleSelectProforma} />
+          )}
+          <DialogClose asChild>
+            <Button variant="outline">Annuler</Button>
+          </DialogClose>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isCreating} onOpenChange={setIsCreating}>
         <DialogContent className="max-h-[90vh] max-w-5xl overflow-y-auto">
@@ -469,17 +409,38 @@ export function FactureManager({
       </Dialog>
 
       {viewed && (
-        <FactureViewDialog
-          viewed={viewed}
-          viewPdfUrl={viewPdfUrl}
-          onOpenChange={(open) => {
-            if (!open) {
-              if (viewPdfUrl) URL.revokeObjectURL(viewPdfUrl);
-              setViewPdfUrl(null);
-              setViewed(null);
-            }
-          }}
-        />
+        <Dialog open={viewed !== null} onOpenChange={handleViewPdfClose}>
+          <DialogContent className="max-w-4xl">
+            <DialogTitle>Facture {viewed.facture_num}</DialogTitle>
+            <DialogDescription>
+              {viewed.client_name} — {formatDate(viewed.date)}
+            </DialogDescription>
+            {viewPdfUrl ? (
+              <object
+                data={viewPdfUrl}
+                type="application/pdf"
+                title={`Facture ${viewed.facture_num}`}
+                className="h-[70vh] w-full rounded-md border"
+              />
+            ) : (
+              <div className="flex h-[70vh] items-center justify-center rounded-md border text-muted-foreground">
+                Chargement…
+              </div>
+            )}
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
+              <a
+                href={`/api/facture/${viewed.id}/download`}
+                className={buttonVariants({ variant: "outline" })}
+              >
+                <DownloadIcon />
+                Télécharger PDF
+              </a>
+              <DialogClose asChild>
+                <Button>Fermer</Button>
+              </DialogClose>
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
