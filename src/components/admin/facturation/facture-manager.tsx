@@ -398,38 +398,36 @@ export function FactureManager({
   }, [initialData]);
 
   /** Sélection d'un proforma : ouvre le formulaire pré-rempli. */
-  function handleSelectProforma(proforma: ProformaWithItems) {
+  const handleSelectProforma = (proforma: ProformaWithItems) => {
     setIsSelectingProforma(false);
     setProformaInitialData(
       buildInitialDataFromProforma(proforma, clients, articles),
     );
     setIsCreating(true);
-  }
+  };
 
   /** Détermine les données initiales à passer au formulaire. */
   const formInitialData: Partial<FactureFormValues> | undefined =
     proformaInitialData ?? (initialData ? buildInitialDataFromParams(initialData) : undefined);
 
-  function handleSaved() {
+  const handleSaved = () => {
     setIsCreating(false);
-    setProformaInitialData(undefined);
+    setProformaInitialData(() => undefined);
     router.replace(window.location.pathname);
     router.refresh();
-  }
+  };
 
-  function handleCancelCreate() {
+  const handleCancelCreate = () => {
     setIsCreating(false);
-    setProformaInitialData(undefined);
-  }
+    setProformaInitialData(() => undefined);
+  };
 
   return (
     <div className="flex w-full flex-col gap-4">
-      <div>
-        <Button onClick={() => setIsSelectingProforma(true)}>
-          <FilePlusIcon />
-          Générer une facture
-        </Button>
-      </div>
+      <Button onClick={() => setIsSelectingProforma(true)}>
+        <FilePlusIcon />
+        Générer une facture
+      </Button>
 
       {visibleFactures.length === 0 ? (
         <div className="flex flex-col items-start gap-2 rounded-lg border border-dashed p-8 text-sm text-muted-foreground">
