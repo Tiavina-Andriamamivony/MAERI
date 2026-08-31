@@ -19,7 +19,6 @@ import {
   DialogContent,
   DialogDescription,
   DialogFooter,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
@@ -128,6 +127,46 @@ function FactureTable({
   );
 }
 
+/** Tableau des proformas pour la sélection (lignes cliquables). */
+function ProformaSelectTable({
+  proformas,
+  onSelect,
+}: {
+  proformas: ProformaWithItems[];
+  onSelect: (proforma: ProformaWithItems) => void;
+}) {
+  return (
+    <Table className="rounded-lg border">
+      <TableHeader>
+        <TableRow>
+          <TableHead>PF N°</TableHead>
+          <TableHead>Client</TableHead>
+          <TableHead>Date</TableHead>
+          <TableHead className="text-right">Montant TTC</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {proformas.map((proforma) => (
+          <TableRow
+            key={proforma.id}
+            className="cursor-pointer hover:bg-muted/50"
+            onClick={() => onSelect(proforma)}
+          >
+            <TableCell className="font-medium">
+              {proforma.pf_num}
+            </TableCell>
+            <TableCell>{proforma.client_name}</TableCell>
+            <TableCell>{formatDate(proforma.date)}</TableCell>
+            <TableCell className="text-right">
+              {formatAmount(proforma.montant_total)}
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+
 /** Dialogue de sélection de proforma (liste cliquable). */
 function ProformaSelectionDialog({
   open,
@@ -143,46 +182,17 @@ function ProformaSelectionDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[80vh] max-w-3xl overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Sélectionner un proforma</DialogTitle>
-          <DialogDescription>
-            Choisissez le proforma à convertir en facture. Les données
-            client et articles seront pré-remplies dans le formulaire.
-          </DialogDescription>
-        </DialogHeader>
+        <DialogTitle>Sélectionner un proforma</DialogTitle>
+        <DialogDescription>
+          Choisissez le proforma à convertir en facture. Les données
+          client et articles seront pré-remplies dans le formulaire.
+        </DialogDescription>
         {proformas.length === 0 ? (
           <p className="py-6 text-center text-sm text-muted-foreground">
             Aucun proforma disponible. Créez d&apos;abord un proforma.
           </p>
         ) : (
-          <Table className="rounded-lg border">
-            <TableHeader>
-              <TableRow>
-                <TableHead>PF N°</TableHead>
-                <TableHead>Client</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead className="text-right">Montant TTC</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {proformas.map((proforma) => (
-                <TableRow
-                  key={proforma.id}
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => onSelect(proforma)}
-                >
-                  <TableCell className="font-medium">
-                    {proforma.pf_num}
-                  </TableCell>
-                  <TableCell>{proforma.client_name}</TableCell>
-                  <TableCell>{formatDate(proforma.date)}</TableCell>
-                  <TableCell className="text-right">
-                    {formatAmount(proforma.montant_total)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <ProformaSelectTable proformas={proformas} onSelect={onSelect} />
         )}
         <DialogFooter>
           <DialogClose asChild>
@@ -207,12 +217,10 @@ function FactureViewDialog({
   return (
     <Dialog open={viewed !== null} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl">
-        <DialogHeader>
-          <DialogTitle>Facture {viewed.facture_num}</DialogTitle>
-          <DialogDescription>
-            {viewed.client_name} — {formatDate(viewed.date)}
-          </DialogDescription>
-        </DialogHeader>
+        <DialogTitle>Facture {viewed.facture_num}</DialogTitle>
+        <DialogDescription>
+          {viewed.client_name} — {formatDate(viewed.date)}
+        </DialogDescription>
         {viewPdfUrl ? (
           <object
             data={viewPdfUrl}
