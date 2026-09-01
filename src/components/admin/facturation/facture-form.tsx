@@ -682,6 +682,8 @@ export function FactureForm({
   const watchedClientId = form.watch("client_id");
   useEffect(() => {
     if (watchedClientId) handleClientChange(watchedClientId);
+    // handleClientChange est stable (pas de dépendances externes)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watchedClientId]);
 
  

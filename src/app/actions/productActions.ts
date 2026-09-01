@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import prisma from '@/lib/prisma'
 import { uploadImage, deleteBlob } from '@/lib/blob'
-import { ActionResult, ok, fail, notFound, type ActionResult as AR } from '@/lib/action-result'
+import { ok, fail, notFound, type ActionResult as AR } from '@/lib/action-result'
 import { requireAdmin } from '@/lib/auth-guard'
 import { firstError } from '@/lib/validations/first-error'
 import { productListPath } from '@/lib/product-types'
