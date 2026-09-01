@@ -56,24 +56,6 @@ export type DocumentClient = {
   mail?: string | null;
 };
 
-/** Bloc d'informations client, partagé entre proforma et facture. */
-export function ClientInfoBlock({ client }: { client: DocumentClient }) {
-  return (
-    <View style={styles.clientBlock}>
-      <Text style={{ fontWeight: "bold" }}>{client.client}</Text>
-      {client.adress ? <Text>{client.adress}</Text> : null}
-      <Text>{client.province}</Text>
-      <Text>{client.nif ? `NIF : ${client.nif}` : ""}</Text>
-      <Text>{client.stat ? `STAT : ${client.stat}` : ""}</Text>
-      <Text>{client.rcs ? `RCS : ${client.rcs}` : ""}</Text>
-      {client.contact || client.phone ? (
-        <Text>{`ATTN: ${client.contact ?? ""} / ${client.phone ?? ""}`}</Text>
-      ) : null}
-      {client.mail ? <Text>{`E-Mail: ${client.mail}`}</Text> : null}
-    </View>
-  );
-}
-
 export const styles = StyleSheet.create({
   page: {
     paddingTop: 28,
@@ -442,6 +424,24 @@ export function TotalsBlock({
         <Text>Montant Total TTC</Text>
         <Text>{formatAmount(totals.montant_total)}</Text>
       </View>
+    </View>
+  );
+}
+
+/** Bloc d'informations client, partagé entre proforma et facture. */
+export function ClientInfoBlock({ client }: { client: DocumentClient }) {
+  return (
+    <View style={styles.clientBlock}>
+      <Text style={{ fontWeight: "bold" }}>{client.client}</Text>
+      {client.adress ? <Text>{client.adress}</Text> : null}
+      <Text>{client.province}</Text>
+      <Text>{client.nif ? `NIF : ${client.nif}` : ""}</Text>
+      <Text>{client.stat ? `STAT : ${client.stat}` : ""}</Text>
+      <Text>{client.rcs ? `RCS : ${client.rcs}` : ""}</Text>
+      {client.contact || client.phone ? (
+        <Text>{`ATTN: ${client.contact ?? ""} / ${client.phone ?? ""}`}</Text>
+      ) : null}
+      {client.mail ? <Text>{`E-Mail: ${client.mail}`}</Text> : null}
     </View>
   );
 }
