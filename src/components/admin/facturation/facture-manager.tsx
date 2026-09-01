@@ -324,6 +324,24 @@ function FactureCreationDialog({
   );
 }
 
+/** Pied du dialog PDF : télécharger + fermer. */
+function FacturePdfDialogFooter({ factureId }: { factureId: number }) {
+  return (
+    <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
+      <a
+        href={`/api/facture/${factureId}/download`}
+        className={buttonVariants({ variant: "outline" })}
+      >
+        <DownloadIcon />
+        Télécharger PDF
+      </a>
+      <DialogClose asChild>
+        <Button>Fermer</Button>
+      </DialogClose>
+    </div>
+  );
+}
+
 /** Dialog de visualisation du PDF d'une facture. */
 function FacturePdfViewerDialog({
   viewed,
@@ -353,18 +371,7 @@ function FacturePdfViewerDialog({
             Chargement…
           </div>
         )}
-        <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
-          <a
-            href={`/api/facture/${viewed.id}/download`}
-            className={buttonVariants({ variant: "outline" })}
-          >
-            <DownloadIcon />
-            Télécharger PDF
-          </a>
-          <DialogClose asChild>
-            <Button>Fermer</Button>
-          </DialogClose>
-        </div>
+        <FacturePdfDialogFooter factureId={viewed.id} />
       </DialogContent>
     </Dialog>
   );
