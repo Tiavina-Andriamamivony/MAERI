@@ -61,3 +61,18 @@ export const positiveNumber = z.coerce.number().positive("Doit être supérieur 
 export const nonNegativeNumber = z
   .coerce.number()
   .nonnegative("Doit être positif ou nul");
+
+/**
+ * Schema partagé pour les lignes d'articles (proforma et facture).
+ * `article_id` est un fill-only côté formulaire, jamais stocké en DB.
+ */
+export const itemSchema = z.object({
+  article_id: z.coerce.number().int().min(1, "Sélectionnez un article"),
+  designation: requiredText,
+  uom: optionalText,
+  quantite: positiveNumber,
+  prix_unitaire: nonNegativeNumber,
+  remise_pct: percent.default(0),
+});
+
+export type ItemInput = z.infer<typeof itemSchema>;

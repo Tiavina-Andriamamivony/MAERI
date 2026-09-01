@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import type { ProformaItemInput } from "@/lib/validations/proforma";
+import type { ItemInput } from "@/lib/validations/shared-zod";
 
-import { lineTotals, proformaTotals } from "./totals";
+import { lineTotals, computeTotals } from "./totals";
 
-function item(overrides: Partial<ProformaItemInput> = {}): ProformaItemInput {
+function item(overrides: Partial<ItemInput> = {}): ItemInput {
   return {
     article_id: 1,
     designation: "Article test",
@@ -50,9 +50,9 @@ describe("lineTotals", () => {
   });
 });
 
-describe("proformaTotals", () => {
+describe("computeTotals", () => {
   it("totalise les lignes sans TVA", () => {
-    const totals = proformaTotals(
+    const totals = computeTotals(
       [
         item({ quantite: 4, prix_unitaire: 12_450_000 }),
         item({ quantite: 2, prix_unitaire: 5_000 }),
@@ -70,7 +70,7 @@ describe("proformaTotals", () => {
   });
 
   it("déduit les remises des lignes du montant net", () => {
-    const totals = proformaTotals(
+    const totals = computeTotals(
       [item({ quantite: 10, prix_unitaire: 1_000, remise_pct: 10 })],
       false,
       20,
@@ -84,7 +84,7 @@ describe("proformaTotals", () => {
   });
 
   it("applique la TVA globale sur le montant net", () => {
-    const totals = proformaTotals(
+    const totals = computeTotals(
       [item({ quantite: 10, prix_unitaire: 1_000 })],
       true,
       20,
@@ -96,7 +96,7 @@ describe("proformaTotals", () => {
   });
 
   it("ne calcule aucune TVA quand elle est désactivée", () => {
-    const totals = proformaTotals(
+    const totals = computeTotals(
       [item({ quantite: 1, prix_unitaire: 1_000 })],
       false,
       20,
@@ -107,7 +107,7 @@ describe("proformaTotals", () => {
   });
 
   it("la chaîne sous-total − remise = net reste exacte à l'arrondi près", () => {
-    const totals = proformaTotals(
+    const totals = computeTotals(
       [item({ quantite: 3, prix_unitaire: 10_000, remise_pct: 5 })],
       false,
       20,
@@ -118,7 +118,7 @@ describe("proformaTotals", () => {
   });
 
   it("une liste vide produit des totaux nuls", () => {
-    const totals = proformaTotals([], true, 20);
+    const totals = computeTotals([], true, 20);
 
     expect(totals).toEqual({
       sous_total: 0,

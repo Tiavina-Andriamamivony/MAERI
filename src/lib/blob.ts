@@ -25,12 +25,12 @@ export async function uploadPdf(
   return blob.url
 }
 
-export async function deleteImage(imageUrl: string | null | undefined): Promise<void> {
-  if (!imageUrl) return
+export async function deleteBlob(blobUrl: string | null | undefined): Promise<void> {
+  if (!blobUrl) return
   try {
-    await del(imageUrl)
+    await del(blobUrl)
   } catch {
-    // Best-effort : une mutation produit ne doit pas échouer parce que le blob
-    // a déjà disparu ou est hébergé ailleurs.
+    // Best-effort : la suppression d'un blob ne doit pas faire échouer
+    // l'opération principale si le blob a déjà disparu.
   }
 }

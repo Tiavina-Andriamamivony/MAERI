@@ -50,7 +50,7 @@ function ProformaRow({
   return (
     <TableRow>
       <TableCell className="font-medium">{proforma.pf_num}</TableCell>
-      <TableCell>{proforma.client_name}</TableCell>
+      <TableCell>{proforma.client?.client ?? "—"}</TableCell>
       <TableCell>{formatDate(proforma.date)}</TableCell>
       <TableCell className="text-right">
         {formatAmount(proforma.montant_total)}
@@ -94,7 +94,7 @@ function ProformaRow({
   );
 }
 
-/** Tableau des proformas. */
+
 function ProformaTableHeader() {
   return (
     <TableHeader>
@@ -109,7 +109,7 @@ function ProformaTableHeader() {
   );
 }
 
-/** Tableau des proformas. */
+
 function ProformaTable({
   proformas,
   onView,
@@ -172,17 +172,7 @@ export function ProformaManager({
 
     const params = new URLSearchParams({
       proforma_id: String(proforma.id),
-      client_id: String(proforma.client_code),
-      client_code: proforma.client_code,
-      client_name: proforma.client_name,
-      client_address: proforma.client_address ?? "",
-      client_province: proforma.client_province,
-      client_nif: proforma.client_nif ?? "",
-      client_stat: proforma.client_stat ?? "",
-      client_rcs: proforma.client_rcs ?? "",
-      client_contact: proforma.client_contact ?? "",
-      client_phone: proforma.client_phone ?? "",
-      client_mail: proforma.client_mail ?? "",
+      client_id: String(proforma.client_id ?? ""),
       votre_reference: proforma.votre_reference ?? "",
       monnaie: proforma.monnaie,
       tva_active: String(proforma.tva_active),
@@ -195,9 +185,7 @@ export function ProformaManager({
   const [viewed, setViewed] = useState<ProformaWithItems | null>(null);
   const [viewPdfUrl, setViewPdfUrl] = useState<string | null>(null);
 
-  // La ligne masquée disparaît immédiatement ; le toast « Annuler » (3 s)
-  // stoppe la suppression tant que la fenêtre n'est pas écoulée. Après
-  // suppression définitive, on recharge la liste depuis le serveur.
+  
   const handleDeleted = useCallback(() => router.refresh(), [router]);
   const { pendingIds, remove } = useRowDeletion(deleteProforma, {
     undoDelayMs: UNDO_DELAY_MS,
@@ -289,7 +277,7 @@ export function ProformaManager({
               <DialogHeader>
                 <DialogTitle>Proforma {viewed.pf_num}</DialogTitle>
                 <DialogDescription>
-                  {viewed.client_name} — {formatDate(viewed.date)}
+                  {viewed.client?.client ?? "—"} — {formatDate(viewed.date)}
                 </DialogDescription>
               </DialogHeader>
               {viewPdfUrl ? (

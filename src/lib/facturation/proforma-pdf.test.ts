@@ -3,23 +3,27 @@ import { describe, expect, it } from "vitest";
 import type { ProformaInput } from "@/lib/validations/proforma";
 import { proformaSchema } from "@/lib/validations/proforma";
 
+import type { DocumentClient } from "./pdf-base";
 import { renderProformaPdf } from "./proforma-pdf";
 
 /** Échantillon calqué sur la ligne de démonstration du template Excel. */
+const sampleClient: DocumentClient = {
+  code_client: 56,
+  client: "CCIS",
+  adress: "Betainomby- Fokontany d'Ambodisaina/Tamatave",
+  province: "Tamatave",
+  nif: null,
+  stat: null,
+  rcs: null,
+  contact: "M. Heyris R.",
+  phone: "+261 32 11 234 20",
+  mail: "tmm.hramanjaka@ccis-network.com",
+};
+
 const sample: ProformaInput = {
   pf_num: "MA-ERI_250-26",
   date: new Date(2026, 7, 17),
   client_id: 1,
-  client_code: "056",
-  client_name: "CCIS",
-  client_address: "Betainomby- Fokontany d'Ambodisaina/Tamatave",
-  client_province: "Tamatave",
-  client_nif: null,
-  client_stat: null,
-  client_rcs: null,
-  client_contact: "M. Heyris R.",
-  client_phone: "+261 32 11 234 20",
-  client_mail: "tmm.hramanjaka@ccis-network.com",
   votre_reference: "WHATSAPP du 24/6/26",
   validite_offre: new Date(2026, 8, 21),
   terme_paiement: 0,
@@ -89,14 +93,14 @@ describe("proformaSchema", () => {
 
 describe("renderProformaPdf", () => {
   it("produit un PDF lisible", async () => {
-    const pdf = await renderProformaPdf(sample);
+    const pdf = await renderProformaPdf(sample, sampleClient);
 
     expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
     expect(pdf.length).toBeGreaterThan(1_000);
   });
 
   it("embarque le logo et la signature (PDF nettement plus lourd que le texte seul)", async () => {
-    const pdf = await renderProformaPdf(sample);
+    const pdf = await renderProformaPdf(sample, sampleClient);
 
     // Sans les images, le PDF tient en ~10 Ko : le logo MA-ERI et la signature
     // (tous deux en PNG dans `public/`) font passer le fichier à ~90 Ko.

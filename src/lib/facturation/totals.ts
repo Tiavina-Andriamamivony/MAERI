@@ -1,4 +1,4 @@
-import type { ProformaItemInput } from "@/lib/validations/proforma";
+import type { ItemInput } from "@/lib/validations/shared-zod";
 
 /**
  * Calculs des montants du proforma, purs et partagés entre le PDF et la
@@ -28,7 +28,7 @@ export interface LineTotals {
   net: number;
 }
 
-export interface ProformaTotals {
+export interface DocumentTotals {
   /** Somme des montants bruts des lignes. */
   sous_total: number;
   /** Somme des remises des lignes. */
@@ -44,18 +44,18 @@ export interface ProformaTotals {
 }
 
 export function lineTotals(
-  item: Pick<ProformaItemInput, "quantite" | "prix_unitaire" | "remise_pct">,
+  item: Pick<ItemInput, "quantite" | "prix_unitaire" | "remise_pct">,
 ): LineTotals {
   const brut = round2(item.quantite * item.prix_unitaire);
   const remise = round2(brut * (item.remise_pct / 100));
   return { brut, remise, net: round2(brut - remise) };
 }
 
-export function proformaTotals(
-  items: ProformaItemInput[],
+export function computeTotals(
+  items: ItemInput[],
   tva_active: boolean,
   tva_rate: number,
-): ProformaTotals {
+): DocumentTotals {
   const lines = items.map(lineTotals);
   const sous_total = round2(
     lines.reduce((sum, line) => sum + line.brut, 0),

@@ -1,61 +1,29 @@
 import { z } from "zod";
 
-/**
- * Source de vérité du formulaire de proforma : le formulaire, l'aperçu PDF,
- * la préview API et la server action dérivent tous de `proformaSchema`.
- *
- * Les noms de champs suivent la convention snake_case des modèles Prisma pour
- * que la persistance n'ait pas besoin de mapping.
- */
-
 import {
   optionalText,
   requiredText,
   requiredDate,
   optionalDate,
   percent,
-  positiveNumber,
-  nonNegativeNumber,
+  itemSchema,
+  type ItemInput,
 } from "./shared-zod";
 
 /** Nombre de lignes d'articles réservées par le template. */
 export const PROFORMA_MAX_ITEMS = 11;
 
-export const proformaItemSchema = z.object({
-  // Identifiant de l'article source (sélection du formulaire) : il sert
-  // uniquement à l'auto-remplissage, jamais de clé étrangère.
-  article_id: z.coerce.number().int().min(1, "Sélectionnez un article"),
-  designation: requiredText,
-  uom: optionalText,
-  quantite: positiveNumber,
-  prix_unitaire: nonNegativeNumber,
-  remise_pct: percent.default(0),
-});
+export const proformaItemSchema = itemSchema;
 
 export const proformaSchema = z.object({
   pf_num: requiredText,
   date: requiredDate,
-  // Copie figée des données client (pas de FK) : le document reste inchangé
-  // même si la fiche client source est modifiée ensuite.
   client_id: z.coerce.number().int().min(1, "Sélectionnez un client"),
-  client_code: z.coerce.string().trim().min(1, "Code client requis"),
-  client_name: requiredText,
-  client_address: optionalText,
-  client_province: requiredText,
-  client_nif: optionalText,
-  client_stat: optionalText,
-  client_rcs: optionalText,
-  client_contact: optionalText,
-  client_phone: optionalText,
-  client_mail: optionalText,
   // Conditions commerciales.
   votre_reference: optionalText,
   validite_offre: optionalDate,
   terme_paiement: z.coerce.number().int().min(0, "Terme invalide").default(0),
   monnaie: requiredText.default("MGA"),
-  // Champs modifiables du proforma (valeur par défaut depuis le template Excel).
-  // On utilise z.string() plutôt que optionalText car Prisma attend une string,
-  // pas null.
   cif: z.string().trim().default(""),
   delai_livraison: z.string().trim().default(""),
   conditions_paiement: z.string().trim().default(""),
@@ -69,4 +37,4 @@ export const proformaSchema = z.object({
 });
 
 export type ProformaInput = z.infer<typeof proformaSchema>;
-export type ProformaItemInput = z.infer<typeof proformaItemSchema>;
+export type ProformaItemInput = ItemInput;

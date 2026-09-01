@@ -1,35 +1,45 @@
 import { getDownloadUrl } from "@vercel/blob";
-import { NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 import prisma from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth-guard";
 
 export const runtime = "nodejs";
 
-/**
- * Télécharge le PDF d'un proforma sauvegardé. Le blob Vercel est public mais
- * le téléchargement reste réservé à l'admin. On redirige vers l'URL de
- * téléchargement du SDK (`?download=1`) : le CDN sert le fichier en pièce
- * jointe directement au navigateur, sans faire transiter les octets par le
- * serveur Next (et sans dépendre de la connectivité du serveur vers le CDN).
- */
 export async function GET(
-  _request: Request,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const admin = await requireAdmin();
   if (!admin.success) {
-    return Response.json({ error: admin.error }, { status: 401 });
+    return Response.json(
+      { error: admin.error, code: admin.code },
+      { status: admin.status },
+    );
   }
 
   const { id } = await params;
-  const proforma = await prisma.proforma.findUnique({
-    where: { id: Number(id) },
-    select: { pdf_url: true },
-  });
-  if (!proforma) {
-    return Response.json({ error: "Proforma introuvable" }, { status: 404 });
+  const proformaId = Number(id);
+  if (Number.isNaN(proformaId)) {
+    console.warn("[proforma:download] ID invalide : %s", id);
+    return Response.json(
+      { error: "ID invalide", code: "INVALID_ID" },
+      { status: 400 },
+    );
   }
 
-  return NextResponse.redirect(getDownloadUrl(proforma.pdf_url));
+  const proforma = await prisma.proforma.findUnique({
+    where: { id: proformaId },
+    select: { pdf_url: true, pf_num: true },
+  });
+  if (!proforma) {
+    console.warn("[proforma:download] Proforma introuvable #%d", proformaId);
+    return Response.json(
+      { error: "Proforma introuvable", code: "PROFORMA_NOT_FOUND" },
+      { status: 404 },
+    );
+  }
+
+  console.log("[proforma:download] Envoi du PDF pour le proforma #%d (%s)", proformaId, proforma.pf_num);
+  return Response.redirect(getDownloadUrl(proforma.pdf_url));
 }

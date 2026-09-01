@@ -1,7 +1,11 @@
 import { auth } from "@clerk/nextjs/server";
 
 import prisma from "@/lib/prisma";
-import { ok, fail, type ActionResult } from "@/lib/action-result";
+import {
+  ok,
+  unauthorized,
+  type ActionResult,
+} from "@/lib/action-result";
 
 /** Message unique : ne pas révéler si l'échec vient de la session ou du rôle. */
 const DENIED = "Accès refusé";
@@ -22,8 +26,14 @@ const DENIED = "Accès refusé";
  */
 export async function requireAdmin(): Promise<ActionResult<{ id: string }>> {
   const { userId: clerkId, sessionClaims } = await auth();
-  if (!clerkId) return fail(DENIED);
-  if (sessionClaims?.metadata?.role !== "admin") return fail(DENIED);
+  if (!clerkId) {
+    console.warn("[auth] Requête sans session Clerk.");
+    return unauthorized(DENIED);
+  }
+  if (sessionClaims?.metadata?.role !== "admin") {
+    console.warn("[auth] Utilisateur %s n'est pas admin.", clerkId);
+    return unauthorized(DENIED);
+  }
 
   const user = await prisma.user.upsert({
     where: { clerkId },
@@ -32,14 +42,4 @@ export async function requireAdmin(): Promise<ActionResult<{ id: string }>> {
   });
 
   return ok({ id: user.id });
-}
-
-/**
- * Variante levée, pour les lectures qui renvoient directement des données.
- * Toute fonction `"use server"` exportée est un endpoint public appelable
- * depuis l'extérieur : les lectures sensibles doivent aussi être gardées.
- */
-export async function assertAdmin(): Promise<void> {
-  const result = await requireAdmin();
-  if (!result.success) throw new Error(result.error);
 }

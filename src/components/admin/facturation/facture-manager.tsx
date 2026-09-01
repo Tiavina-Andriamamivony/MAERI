@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { DownloadIcon, EyeIcon, FilePlusIcon, Trash2Icon } from "lucide-react";
 
 import type { Article, Client } from "@/app/generated/prisma/client";
-import { formatClientCode } from "@/lib/analyse/codes";
 import {
   deleteFacture,
   type FactureWithItems,
@@ -48,7 +47,7 @@ function FactureRow({
   return (
     <TableRow>
       <TableCell className="font-medium">{facture.facture_num}</TableCell>
-      <TableCell>{facture.client_name}</TableCell>
+      <TableCell>{facture.client?.client ?? "—"}</TableCell>
       <TableCell>{formatDate(facture.date)}</TableCell>
       <TableCell className="text-right">
         {formatAmount(facture.montant_total)}
@@ -84,7 +83,7 @@ function FactureRow({
   );
 }
 
-/** En-tête du tableau des factures. */
+
 function FactureTableHeader() {
   return (
     <TableHeader>
@@ -99,7 +98,7 @@ function FactureTableHeader() {
   );
 }
 
-/** Tableau des factures. */
+
 function FactureTable({
   factures,
   onView,
@@ -126,7 +125,7 @@ function FactureTable({
   );
 }
 
-/** Tableau des proformas pour la sélection (lignes cliquables). */
+
 function ProformaSelectTable({
   proformas,
   onSelect,
@@ -154,7 +153,7 @@ function ProformaSelectTable({
             <TableCell className="font-medium">
               {proforma.pf_num}
             </TableCell>
-            <TableCell>{proforma.client_name}</TableCell>
+            <TableCell>{proforma.client?.client ?? "—"}</TableCell>
             <TableCell>{formatDate(proforma.date)}</TableCell>
             <TableCell className="text-right">
               {formatAmount(proforma.montant_total)}
@@ -191,23 +190,9 @@ function buildInitialDataFromProforma(
     };
   });
 
-  const matchedClient = clients.find(
-    (c) => formatClientCode(c.code_client) === proforma.client_code,
-  );
-
   return {
     proforma_id: proforma.id,
-    client_id: matchedClient?.id,
-    client_code: proforma.client_code,
-    client_name: proforma.client_name,
-    client_address: proforma.client_address ?? "",
-    client_province: proforma.client_province,
-    client_nif: proforma.client_nif ?? "",
-    client_stat: proforma.client_stat ?? "",
-    client_rcs: proforma.client_rcs ?? "",
-    client_contact: proforma.client_contact ?? "",
-    client_phone: proforma.client_phone ?? "",
-    client_mail: proforma.client_mail ?? "",
+    client_id: proforma.client_id ?? undefined,
     votre_reference: proforma.votre_reference ?? "",
     monnaie: proforma.monnaie,
     tva_active: proforma.tva_active,
@@ -228,16 +213,6 @@ function buildInitialDataFromParams(
       facture_num: params.facture_num,
       date: params.date,
       client_id: params.client_id ? Number(params.client_id) : undefined,
-      client_code: params.client_code,
-      client_name: params.client_name,
-      client_address: params.client_address,
-      client_province: params.client_province,
-      client_nif: params.client_nif,
-      client_stat: params.client_stat,
-      client_rcs: params.client_rcs,
-      client_contact: params.client_contact,
-      client_phone: params.client_phone,
-      client_mail: params.client_mail,
       votre_reference: params.votre_reference,
       monnaie: params.monnaie,
       livraison: params.livraison,
@@ -256,7 +231,7 @@ function buildInitialDataFromParams(
 
 /* ─── Sous-composants extraits pour limiter l'imbrication JSX ─── */
 
-/** Dialog de sélection d'un proforma. */
+
 function ProformaSelectionDialog({
   open,
   onOpenChange,
@@ -291,7 +266,7 @@ function ProformaSelectionDialog({
   );
 }
 
-/** Dialog de création / édition d'une facture. */
+
 function FactureCreationDialog({
   open,
   onOpenChange,
@@ -324,7 +299,7 @@ function FactureCreationDialog({
   );
 }
 
-/** Pied du dialog PDF : télécharger + fermer. */
+
 function FacturePdfDialogFooter({ factureId }: { factureId: number }) {
   return (
     <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
@@ -342,7 +317,7 @@ function FacturePdfDialogFooter({ factureId }: { factureId: number }) {
   );
 }
 
-/** Dialog de visualisation du PDF d'une facture. */
+
 function FacturePdfViewerDialog({
   viewed,
   pdfUrl,
@@ -357,7 +332,7 @@ function FacturePdfViewerDialog({
       <DialogContent className="max-w-4xl">
         <DialogTitle>Facture {viewed.facture_num}</DialogTitle>
         <DialogDescription>
-          {viewed.client_name} — {formatDate(viewed.date)}
+          {viewed.client?.client ?? "—"} — {formatDate(viewed.date)}
         </DialogDescription>
         {pdfUrl ? (
           <object
@@ -400,9 +375,8 @@ export function FactureManager({
   const [viewed, setViewed] = useState<FactureWithItems | null>(null);
   const [viewPdfUrl, setViewPdfUrl] = useState<string | null>(null);
 
-  // La ligne masquée disparaît immédiatement ; le toast « Annuler » (3 s)
-  // stoppe la suppression tant que la fenêtre n'est pas écoulée. Après
-  // suppression définitive, on recharge la liste depuis le serveur.
+
+
   const handleDeleted = useCallback(() => router.refresh(), [router]);
   const { pendingIds, remove } = useRowDeletion(deleteFacture, {
     undoDelayMs: UNDO_DELAY_MS,
@@ -444,7 +418,8 @@ export function FactureManager({
     }
   }, [initialData]);
 
-  /** Sélection d'un proforma : ouvre le formulaire pré-rempli. */
+  
+
   const handleSelectProforma = (proforma: ProformaWithItems) => {
     setIsSelectingProforma(false);
     setProformaInitialData(
@@ -453,7 +428,7 @@ export function FactureManager({
     setIsCreating(true);
   };
 
-  /** Détermine les données initiales à passer au formulaire. */
+  
   const formInitialData: Partial<FactureFormValues> | undefined =
     proformaInitialData ?? (initialData ? buildInitialDataFromParams(initialData) : undefined);
 

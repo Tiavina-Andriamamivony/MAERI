@@ -5,23 +5,26 @@ import { requireAdmin } from "@/lib/auth-guard";
 
 export const runtime = "nodejs";
 
-/**
- * Téléchargement du PDF d'une facture déjà enregistrée. Redirige vers l'URL
- * Vercel Blob stockée en base (`pdf_url`).
- */
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const admin = await requireAdmin();
   if (!admin.success) {
-    return Response.json({ error: admin.error }, { status: 401 });
+    return Response.json(
+      { error: admin.error, code: admin.code },
+      { status: admin.status },
+    );
   }
 
   const { id } = await params;
   const factureId = Number(id);
   if (Number.isNaN(factureId)) {
-    return Response.json({ error: "ID invalide" }, { status: 400 });
+    console.warn("[facture:download] ID invalide : %s", id);
+    return Response.json(
+      { error: "ID invalide", code: "INVALID_ID" },
+      { status: 400 },
+    );
   }
 
   const facture = await prisma.facture.findUnique({
@@ -30,8 +33,12 @@ export async function GET(
   });
 
   if (!facture) {
-    return Response.json({ error: "Facture introuvable" }, { status: 404 });
+    return Response.json(
+      { error: "Facture introuvable", code: "FACTURE_NOT_FOUND" },
+      { status: 404 },
+    );
   }
 
+  console.log("[facture:download] Serving PDF for facture %d (%s)", factureId, facture.facture_num);
   return Response.redirect(facture.pdf_url);
 }

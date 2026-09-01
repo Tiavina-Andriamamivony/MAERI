@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFieldArray, useForm, type Path } from "react-hook-form";
 import { FileTextIcon, Loader2, PlusIcon, Trash2Icon } from "lucide-react";
 import { toast } from "sonner";
@@ -282,7 +282,8 @@ function ItemFields({
   );
 }
 
-/** Section sélection client + champs auto-remplis. */
+
+
 function ClientSection({
   form,
   clients,
@@ -383,7 +384,7 @@ function CommercialFields({
   );
 }
 
-/** Section articles + remise + TVA. */
+
 function ArticlesSection({
   form,
   articles,
@@ -678,10 +679,15 @@ export function FactureForm({
     form.setValue(`items.${index}.prix_unitaire`, article.prix_vente_ttc ?? 0);
   }
 
-  /**
-   * Valide le formulaire avec le schéma zod (source de vérité) et place les
-   * erreurs champ par champ pour l&apos;affichage inline.
-   */
+  const watchedClientId = form.watch("client_id");
+  useEffect(() => {
+    if (watchedClientId) handleClientChange(watchedClientId);
+  }, [watchedClientId]);
+
+ 
+
+
+
   function validateForm(): boolean {
     const parsed = factureSchema.safeParse(form.getValues());
     if (parsed.success) return true;
@@ -699,7 +705,7 @@ export function FactureForm({
     return false;
   }
 
-  /** Valide le formulaire et renvoie le payload zod (source de vérité). */
+  
   function buildPayload(): FactureInput | null {
     if (!validateForm()) {
       toast.error(
@@ -715,7 +721,8 @@ export function FactureForm({
     return parsed.data;
   }
 
-  /** Génère le PDF à la volée (rien n&apos;est encore sauvegardé). */
+  
+  
   async function handlePreview() {
     const payload = buildPayload();
     if (!payload) return;
@@ -745,7 +752,8 @@ export function FactureForm({
     }
   }
 
-  /** Sauvegarde le payload validé au moment de l&apos;aperçu. */
+
+
   async function handleSave() {
     const payload = pendingPayload.current;
     if (!payload) return;

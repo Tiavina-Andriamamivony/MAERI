@@ -3,37 +3,35 @@
 import { revalidatePath } from "next/cache";
 
 import prisma from "@/lib/prisma";
-import { assertAdmin, requireAdmin } from "@/lib/auth-guard";
-import { ok, fail, type ActionResult } from "@/lib/action-result";
+import { requireAdmin } from "@/lib/auth-guard";
+import {
+  ok,
+  fail,
+  notFound,
+  conflict,
+  validationError,
+  type ActionResult,
+} from "@/lib/action-result";
 import { firstError } from "@/lib/validations/first-error";
 import {
   factureSchema,
   type FactureInput,
 } from "@/lib/validations/facture";
 import { amountInWords } from "@/lib/facturation/amount-in-words";
-import { lineTotals, proformaTotals } from "@/lib/facturation/totals";
+import { lineTotals, computeTotals } from "@/lib/facturation/totals";
 import { renderFacturePdf } from "@/lib/facturation/facture-pdf";
-import { deleteImage, uploadPdf } from "@/lib/blob";
-import { Facture, FactureItem } from "../generated/prisma/client";
+import { deleteBlob, uploadPdf } from "@/lib/blob";
+import { isUniqueViolation } from "@/lib/facturation/prisma-errors";
+import { Facture, FactureItem, Client } from "../generated/prisma/client";
 
-export type FactureWithItems = Facture & { items: FactureItem[] };
-
-/** Code d'erreur Prisma d'une violation de contrainte d'unicité. */
-const UNIQUE_VIOLATION_CODE = "P2002";
-
-function isUniqueViolation(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    error.code === UNIQUE_VIOLATION_CODE
-  );
-}
+export type FactureWithItems = Facture & { items: FactureItem[]; client: Client | null };
 
 export default async function getFactures(): Promise<FactureWithItems[]> {
-  await assertAdmin();
+  const auth = await requireAdmin();
+  if (!auth.success) return [];
+
   return prisma.facture.findMany({
-    include: { items: true },
+    include: { items: true, client: true },
     orderBy: { created_at: "desc" },
   });
 }
@@ -45,17 +43,20 @@ export default async function getFactures(): Promise<FactureWithItems[]> {
 export async function deleteFacture(
   id: number,
 ): Promise<ActionResult<FactureWithItems>> {
-  const user = await requireAdmin();
-  if (!user.success) return user;
+  const auth = await requireAdmin();
+  if (!auth.success) return auth;
 
   const existing = await prisma.facture.findUnique({
     where: { id },
-    include: { items: true },
+    include: { items: true, client: true },
   });
-  if (!existing) return fail("Facture introuvable.");
+  if (!existing) {
+    return notFound("Facture introuvable.", "FACTURE_NOT_FOUND");
+  }
 
+  console.log("[facture] Suppression de la facture #%d (%s)", id, existing.facture_num);
   await prisma.facture.delete({ where: { id } });
-  await deleteImage(existing.pdf_url);
+  await deleteBlob(existing.pdf_url);
 
   revalidatePath("/admin/facturation/facture");
   return ok(existing);
@@ -69,21 +70,36 @@ export async function deleteFacture(
 export async function createFacture(
   payload: FactureInput,
 ): Promise<ActionResult<FactureWithItems>> {
-  const user = await requireAdmin();
-  if (!user.success) return user;
+  const auth = await requireAdmin();
+  if (!auth.success) return auth;
 
   const input = factureSchema.safeParse(payload);
-  if (!input.success) return fail(firstError(input.error));
+  if (!input.success) {
+    return validationError(firstError(input.error));
+  }
 
   const data = input.data;
-  const totals = proformaTotals(data.items, data.tva_active, data.tva_rate);
+
+  const client = await prisma.client.findUnique({
+    where: { id: data.client_id },
+  });
+  if (!client) {
+    return notFound("Client introuvable.", "CLIENT_NOT_FOUND");
+  }
+
+  const totals = computeTotals(data.items, data.tva_active, data.tva_rate);
 
   let pdfUrl: string;
   try {
-    const pdf = await renderFacturePdf(data);
+    const pdf = await renderFacturePdf(data, client);
     pdfUrl = await uploadPdf(pdf, `${data.facture_num}.pdf`);
-  } catch {
-    return fail("Impossible de générer ou stocker le PDF de la facture.");
+  } catch (error) {
+    console.error("[facture] Échec de la génération/upload du PDF :", error);
+    return fail(
+      "Impossible de générer ou stocker le PDF de la facture.",
+      500,
+      "PDF_GENERATION_FAILED",
+    );
   }
 
   try {
@@ -91,29 +107,15 @@ export async function createFacture(
       data: {
         facture_num: data.facture_num,
         date: data.date,
-        // Copie figée des données client.
-        client_code: data.client_code,
-        client_name: data.client_name,
-        client_address: data.client_address,
-        client_province: data.client_province,
-        client_nif: data.client_nif,
-        client_stat: data.client_stat,
-        client_rcs: data.client_rcs,
-        client_contact: data.client_contact,
-        client_phone: data.client_phone,
-        client_mail: data.client_mail,
-        // Conditions commerciales.
+        client: { connect: { id: data.client_id } },
         votre_reference: data.votre_reference,
         monnaie: data.monnaie,
         tva_active: data.tva_active,
         tva_rate: data.tva_rate,
-        // Champs spécifiques à la facture.
         date_paiement: data.date_paiement ?? null,
         livraison: data.livraison,
         paiement: data.paiement,
-        // Référence vers le proforma source (optionnel).
-        proforma_id: data.proforma_id ?? null,
-        // Totaux recalculés côté serveur, jamais repris du client.
+        ...(data.proforma_id ? { proforma: { connect: { id: data.proforma_id } } } : {}),
         sous_total: totals.sous_total,
         remise: totals.remise,
         montant_net: totals.montant_net,
@@ -123,7 +125,6 @@ export async function createFacture(
         pdf_url: pdfUrl,
         items: {
           create: data.items.map((item) => ({
-            // Copie figée des données article.
             designation: item.designation,
             uom: item.uom,
             quantite: item.quantite,
@@ -133,17 +134,21 @@ export async function createFacture(
           })),
         },
       },
-      include: { items: true },
+      include: { items: true, client: true },
     });
 
+    console.log("[facture] Facture créée #%d (%s)", facture.id, facture.facture_num);
     revalidatePath("/admin/facturation/facture");
     return ok(facture);
   } catch (error) {
-    // Le PDF a déjà été stocké : on le retire pour ne pas laisser d'orphelin.
-    await deleteImage(pdfUrl);
+    await deleteBlob(pdfUrl);
     if (isUniqueViolation(error)) {
-      return fail("Ce numéro de facture existe déjà.");
+      return conflict(
+        `Le numéro de facture « ${data.facture_num} » existe déjà.`,
+        "FACTURE_NUM_DUPLICATE",
+      );
     }
-    throw error;
+    console.error("[facture] Erreur inattendue de la base de données :", error);
+    return fail("Erreur interne lors de la création de la facture.", 500, "INTERNAL_ERROR");
   }
 }
