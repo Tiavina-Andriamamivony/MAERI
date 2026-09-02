@@ -32,10 +32,11 @@ import {
 import { useRowDeletion } from "../analyse/use-row-deletion";
 import { ProformaForm } from "./proforma-form";
 
-/** Fenêtre d'annulation de la suppression d'un proforma (3 s). */
+
 const UNDO_DELAY_MS = 3000;
 
-/** Ligne du tableau avec actions (voir, créer facture, télécharger, supprimer). */
+
+
 function ProformaRow({
   proforma,
   onView,
@@ -185,7 +186,7 @@ export function ProformaManager({
   const [viewed, setViewed] = useState<ProformaWithItems | null>(null);
   const [viewPdfUrl, setViewPdfUrl] = useState<string | null>(null);
 
-  
+
   const handleDeleted = useCallback(() => router.refresh(), [router]);
   const { pendingIds, remove } = useRowDeletion(deleteProforma, {
     undoDelayMs: UNDO_DELAY_MS,

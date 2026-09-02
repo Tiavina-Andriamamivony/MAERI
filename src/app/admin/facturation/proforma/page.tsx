@@ -6,11 +6,9 @@ import getArticles from "@/app/actions/articleActions";
 import { requireAdmin } from "@/lib/auth-guard";
 import { ProformaManager } from "@/components/admin/facturation/proforma-manager";
 
-// Page protégée par auth (Clerk) : jamais prérendue en statique.
 export const dynamic = "force-dynamic";
 
 export default async function ProformaPage() {
-  // Le middleware protège déjà `/admin` ; on revérifie côté serveur par sécurité.
   const admin = await requireAdmin();
   if (!admin.success) notFound();
 

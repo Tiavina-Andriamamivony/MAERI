@@ -36,10 +36,7 @@ export default async function getFactures(): Promise<FactureWithItems[]> {
   });
 }
 
-/**
- * Supprime une facture et son PDF stocké dans Vercel Blob. Les lignes de la
- * facture sont supprimées en cascade par Prisma (`onDelete: Cascade`).
- */
+
 export async function deleteFacture(
   id: number,
 ): Promise<ActionResult<FactureWithItems>> {
@@ -62,11 +59,7 @@ export async function deleteFacture(
   return ok(existing);
 }
 
-/**
- * Crée une facture : revalide le payload (zod), recalcule les totaux côté
- * serveur, rend le PDF, le stocke dans Vercel Blob puis persiste le document
- * et ses lignes. La facture est immuable après sauvegarde.
- */
+
 export async function createFacture(
   payload: FactureInput,
 ): Promise<ActionResult<FactureWithItems>> {

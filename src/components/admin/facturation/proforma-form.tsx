@@ -284,10 +284,7 @@ function ItemFields({
   );
 }
 
-/**
- * Corps du formulaire de proforma (champs + articles + TVA).
- * Extrait pour limiter la profondeur d'imbrication JSX.
- */
+
 function ProformaFormBody({
   form,
   clients,
@@ -710,12 +707,8 @@ export function ProformaForm({
     );
   }
 
-  /**
-   * Valide le formulaire avec le schéma zod (source de vérité) et place les
-   * erreurs champ par champ pour l'affichage inline. Le schéma coerce les
-   * valeurs brutes du formulaire (dates, nombres), d'où une validation
-   * manuelle plutôt qu'un resolver react-hook-form.
-   */
+  
+  
   function validateForm(): boolean {
     const parsed = proformaSchema.safeParse(form.getValues());
     if (parsed.success) return true;

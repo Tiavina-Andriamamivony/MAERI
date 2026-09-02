@@ -475,10 +475,7 @@ function ArticlesSection({
   );
 }
 
-/**
- * Corps du formulaire de facture (champs + articles + TVA).
- * Extrait pour limiter la profondeur d&apos;imbrication JSX.
- */
+
 function FactureFormBody({
   form,
   clients,
@@ -723,7 +720,7 @@ export function FactureForm({
     return parsed.data;
   }
 
-  
+
   
   async function handlePreview() {
     const payload = buildPayload();

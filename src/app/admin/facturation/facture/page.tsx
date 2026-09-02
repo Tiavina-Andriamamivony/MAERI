@@ -15,7 +15,7 @@ export default async function FacturePage({
 }: {
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
-  // Le middleware protège déjà `/admin` ; on revérifie côté serveur par sécurité.
+ 
   const admin = await requireAdmin();
   if (!admin.success) notFound();
 
@@ -28,8 +28,6 @@ export default async function FacturePage({
     getProformas(),
   ]);
 
-  // Données pré-remplies depuis un proforma (via query params).
-  // Filtrer les valeurs undefined pour satisfaire le type Record<string, string>.
   const initialData =
     params && Object.keys(params).length > 0
       ? Object.fromEntries(
