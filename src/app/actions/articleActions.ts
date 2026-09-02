@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache";
 
 import prisma from "@/lib/prisma";
-import { assertAdmin, requireAdmin } from "@/lib/auth-guard";
-import { ok, fail, type ActionResult } from "@/lib/action-result";
+import { requireAdmin } from "@/lib/auth-guard";
+import { ok, fail, notFound, type ActionResult } from "@/lib/action-result";
 import {
   createWithAllocatedKey,
   nextArticleReference,
@@ -17,26 +17,28 @@ import {
 import { Article } from "../generated/prisma/client";
 
 export default async function getArticles(): Promise<Article[]> {
-  await assertAdmin();
+  const auth = await requireAdmin();
+  if (!auth.success) return [];
+
   return await prisma.article.findMany({ orderBy: { reference: "asc" } });
 }
 
 export async function createArticle(
   formData: FormData,
 ): Promise<ActionResult<Article>> {
-  const user = await requireAdmin();
-  if (!user.success) return user;
+  const auth = await requireAdmin();
+  if (!auth.success) return auth;
 
   const input = createArticleSchema.safeParse(Object.fromEntries(formData));
-  if (!input.success) return fail(firstError(input.error));
+  if (!input.success) return fail(firstError(input.error), 422, "VALIDATION_ERROR");
 
-  // La référence est attribuée ici, jamais saisie : on prend la suivante libre.
   const article = await createWithAllocatedKey(async () =>
     prisma.article.create({
       data: { ...input.data, reference: await nextArticleReference() },
     }),
   );
 
+  console.log("[article] Article créé #%d (réf: %s)", article.id, article.reference);
   revalidatePath("/admin/analyses");
   return ok(article);
 }
@@ -44,15 +46,16 @@ export async function createArticle(
 export async function updateArticle(
   formData: FormData,
 ): Promise<ActionResult<Article>> {
-  const user = await requireAdmin();
-  if (!user.success) return user;
+  const auth = await requireAdmin();
+  if (!auth.success) return auth;
 
   const input = updateArticleSchema.safeParse(Object.fromEntries(formData));
-  if (!input.success) return fail(firstError(input.error));
+  if (!input.success) return fail(firstError(input.error), 422, "VALIDATION_ERROR");
 
   const { id, ...data } = input.data;
   const article = await prisma.article.update({ where: { id }, data });
 
+  console.log("[article] Article mis à jour #%d", id);
   revalidatePath("/admin/analyses");
   return ok(article);
 }
@@ -60,15 +63,15 @@ export async function updateArticle(
 export async function deleteArticle(
   id: number,
 ): Promise<ActionResult<Article>> {
-  const user = await requireAdmin();
-  if (!user.success) return user;
+  const auth = await requireAdmin();
+  if (!auth.success) return auth;
 
   try {
     const article = await prisma.article.delete({ where: { id } });
+    console.log("[article] Article supprimé #%d", id);
     revalidatePath("/admin/analyses");
     return ok(article);
   } catch {
-    // Prisma lève P2025 si la ligne n'existe plus (déjà supprimée ailleurs).
-    return fail("Article introuvable ou déjà supprimé.");
+    return notFound("Article introuvable ou déjà supprimé.", "ARTICLE_NOT_FOUND");
   }
 }

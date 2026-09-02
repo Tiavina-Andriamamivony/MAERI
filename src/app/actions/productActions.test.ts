@@ -23,7 +23,7 @@ vi.mock('@/lib/prisma', () => ({
 
 vi.mock('@/lib/blob', () => ({
   uploadImage: vi.fn(),
-  deleteImage: vi.fn(),
+  deleteBlob: vi.fn(),
 }))
 
 vi.mock('@clerk/nextjs/server', () => ({
@@ -31,7 +31,7 @@ vi.mock('@clerk/nextjs/server', () => ({
 }))
 
 import prisma from '@/lib/prisma'
-import { uploadImage, deleteImage } from '@/lib/blob'
+import { uploadImage, deleteBlob } from '@/lib/blob'
 import { auth } from '@clerk/nextjs/server'
 
 const UUID = '11111111-1111-1111-1111-111111111111'
@@ -64,42 +64,42 @@ describe('createProduct', () => {
   it('rejette un utilisateur non authentifié', async () => {
     vi.mocked(auth).mockResolvedValue({ userId: null } as never)
     const res = await createProduct(form({ name: 'Roulement', type: TYPE }))
-    expect(res).toEqual({ success: false, error: 'Accès refusé' })
+    expect(res).toEqual({ success: false, error: 'Accès refusé', status: 401, code: 'UNAUTHORIZED' })
     expect(prisma.product.create).not.toHaveBeenCalled()
   })
 
   it('rejette un utilisateur connecté sans le rôle admin', async () => {
     vi.mocked(auth).mockResolvedValue({ userId: 'clerk-1', sessionClaims: {} } as never)
     const res = await createProduct(form({ name: 'Roulement', type: TYPE }))
-    expect(res).toEqual({ success: false, error: 'Accès refusé' })
+    expect(res).toEqual({ success: false, error: 'Accès refusé', status: 401, code: 'UNAUTHORIZED' })
     expect(prisma.product.create).not.toHaveBeenCalled()
   })
 
   it('rejette un nom vide', async () => {
     signedIn()
     const res = await createProduct(form({ name: '', type: TYPE }))
-    expect(res).toEqual({ success: false, error: 'Le nom est requis' })
+    expect(res).toEqual({ success: false, error: 'Le nom est requis', status: 422, code: 'VALIDATION_ERROR' })
     expect(prisma.product.create).not.toHaveBeenCalled()
   })
 
   it('rejette un type invalide', async () => {
     signedIn()
     const res = await createProduct(form({ name: 'Roulement', type: 'PAS_UN_TYPE' }))
-    expect(res).toEqual({ success: false, error: 'Type de produit invalide' })
+    expect(res).toEqual({ success: false, error: 'Type de produit invalide', status: 422, code: 'VALIDATION_ERROR' })
   })
 
   it('rejette une image trop lourde', async () => {
     signedIn()
     const big = new File([new Uint8Array(6 * 1024 * 1024)], 'big.png', { type: 'image/png' })
     const res = await createProduct(form({ name: 'Roulement', type: TYPE, image: big }))
-    expect(res).toEqual({ success: false, error: 'L’image ne doit pas dépasser 5 Mo' })
+    expect(res).toEqual({ success: false, error: 'L’image ne doit pas dépasser 5 Mo', status: 422, code: 'VALIDATION_ERROR' })
   })
 
   it('rejette un mauvais type de fichier', async () => {
     signedIn()
     const pdf = new File([new Uint8Array(10)], 'doc.pdf', { type: 'application/pdf' })
     const res = await createProduct(form({ name: 'Roulement', type: TYPE, image: pdf }))
-    expect(res).toEqual({ success: false, error: 'Format accepté : JPEG, PNG, WebP ou GIF' })
+    expect(res).toEqual({ success: false, error: 'Format accepté : JPEG, PNG, WebP ou GIF', status: 422, code: 'VALIDATION_ERROR' })
   })
 
   it('crée un produit sans image', async () => {
@@ -137,21 +137,21 @@ describe('updateProduct', () => {
   it('rejette un utilisateur non authentifié', async () => {
     vi.mocked(auth).mockResolvedValue({ userId: null } as never)
     const res = await updateProduct(form({ id: UUID, name: 'Roulement', type: TYPE }))
-    expect(res).toEqual({ success: false, error: 'Accès refusé' })
+    expect(res).toEqual({ success: false, error: 'Accès refusé', status: 401, code: 'UNAUTHORIZED' })
     expect(prisma.product.update).not.toHaveBeenCalled()
   })
 
   it('rejette un id non-uuid', async () => {
     signedIn()
     const res = await updateProduct(form({ id: 'abc', name: 'Roulement', type: TYPE }))
-    expect(res).toEqual({ success: false, error: 'Identifiant produit invalide' })
+    expect(res).toEqual({ success: false, error: 'Identifiant produit invalide', status: 422, code: 'VALIDATION_ERROR' })
   })
 
   it('échoue si produit introuvable', async () => {
     signedIn()
     vi.mocked(prisma.product.findUnique).mockResolvedValue(null)
     const res = await updateProduct(form({ id: UUID, name: 'Roulement', type: TYPE }))
-    expect(res).toEqual({ success: false, error: 'Produit introuvable' })
+    expect(res).toEqual({ success: false, error: 'Produit introuvable.', status: 404, code: 'PRODUCT_NOT_FOUND' })
   })
 
   it('met à jour sans toucher à l’image', async () => {
@@ -162,7 +162,7 @@ describe('updateProduct', () => {
     await updateProduct(form({ id: UUID, name: 'Nouveau', type: TYPE }))
 
     expect(uploadImage).not.toHaveBeenCalled()
-    expect(deleteImage).not.toHaveBeenCalled()
+    expect(deleteBlob).not.toHaveBeenCalled()
     expect(prisma.product.update).toHaveBeenCalledWith({
       where: { id: UUID },
       data: { name: 'Nouveau', description: undefined, type: TYPE, imageUrl: 'old' },
@@ -178,7 +178,7 @@ describe('updateProduct', () => {
     await updateProduct(form({ id: UUID, name: 'Nouveau', type: TYPE, image: imageFile() }))
 
     expect(uploadImage).toHaveBeenCalledOnce()
-    expect(deleteImage).toHaveBeenCalledWith('old-url')
+    expect(deleteBlob).toHaveBeenCalledWith('old-url')
     expect(prisma.product.update).toHaveBeenCalledWith({
       where: { id: UUID },
       data: { name: 'Nouveau', description: undefined, type: TYPE, imageUrl: 'new-url' },
@@ -190,21 +190,21 @@ describe('deleteProduct', () => {
   it('rejette un utilisateur non authentifié', async () => {
     vi.mocked(auth).mockResolvedValue({ userId: null } as never)
     const res = await deleteProduct(form({ id: UUID }))
-    expect(res).toEqual({ success: false, error: 'Accès refusé' })
+    expect(res).toEqual({ success: false, error: 'Accès refusé', status: 401, code: 'UNAUTHORIZED' })
     expect(prisma.product.delete).not.toHaveBeenCalled()
   })
 
   it('rejette un id non-uuid', async () => {
     signedIn()
     const res = await deleteProduct(form({ id: 'nope' }))
-    expect(res).toEqual({ success: false, error: 'Identifiant produit invalide' })
+    expect(res).toEqual({ success: false, error: 'Identifiant produit invalide', status: 422, code: 'VALIDATION_ERROR' })
   })
 
   it('échoue si produit introuvable', async () => {
     signedIn()
     vi.mocked(prisma.product.findUnique).mockResolvedValue(null)
     const res = await deleteProduct(form({ id: UUID }))
-    expect(res).toEqual({ success: false, error: 'Produit introuvable' })
+    expect(res).toEqual({ success: false, error: 'Produit introuvable.', status: 404, code: 'PRODUCT_NOT_FOUND' })
   })
 
   it('supprime le produit et son image', async () => {
@@ -215,7 +215,7 @@ describe('deleteProduct', () => {
     const res = await deleteProduct(form({ id: UUID }))
 
     expect(prisma.product.delete).toHaveBeenCalledWith({ where: { id: UUID } })
-    expect(deleteImage).toHaveBeenCalledWith('url')
+    expect(deleteBlob).toHaveBeenCalledWith('url')
     expect(res).toEqual({ success: true, data: undefined })
   })
 })
@@ -223,13 +223,13 @@ describe('deleteProduct', () => {
 describe('getProduct', () => {
   it('rejette un id non-uuid', async () => {
     const res = await getProduct('abc')
-    expect(res).toEqual({ success: false, error: 'Identifiant produit invalide' })
+    expect(res).toEqual({ success: false, error: 'Identifiant produit invalide', status: 422, code: 'VALIDATION_ERROR' })
   })
 
   it('échoue si produit introuvable', async () => {
     vi.mocked(prisma.product.findUnique).mockResolvedValue(null)
     const res = await getProduct(UUID)
-    expect(res).toEqual({ success: false, error: 'Produit introuvable' })
+    expect(res).toEqual({ success: false, error: 'Produit introuvable.', status: 404, code: 'PRODUCT_NOT_FOUND' })
   })
 
   it('renvoie le produit', async () => {

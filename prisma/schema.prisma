@@ -38,8 +38,8 @@ enum Product_type {
 }
 
 model Client {
-  id           Int     @id @default(autoincrement())
-  code_client  Int     @unique
+  id           Int          @id @default(autoincrement())
+  code_client  Int          @unique
   client       String
   adress       String?
   province     String
@@ -50,6 +50,8 @@ model Client {
   contact      String?
   phone        String?
   mail         String?
+  proformas    Proforma[]
+  factures     Facture[]
 }
 
 model Article {
@@ -60,4 +62,86 @@ model Article {
   uom            String?
   prix_achat_ttc Float?
   prix_vente_ttc Float?
+}
+
+model Proforma {
+  id                Int            @id @default(autoincrement())
+  pf_num            String         @unique
+  date              DateTime
+  client_id         Int?
+  client            Client?        @relation(fields: [client_id], references: [id], onDelete: SetNull)
+  votre_reference   String?
+  validite_offre    DateTime?
+  terme_paiement    Int
+  monnaie           String
+  tva_active        Boolean        @default(false)
+  tva_rate          Float          @default(20)
+  // Champs modifiables du proforma.
+  cif               String         @default("")
+  delai_livraison   String         @default("")
+  conditions_paiement String       @default("")
+  // Totaux recalculés côté serveur à la création.
+  sous_total        Float
+  remise            Float
+  montant_net       Float
+  montant_tva       Float
+  montant_total     Float
+  montant_en_lettres String
+  pdf_url           String
+  created_at        DateTime       @default(now())
+  items             ProformaItem[]
+  factures          Facture[]
+}
+
+model ProformaItem {
+  id            Int      @id @default(autoincrement())
+  proforma_id   Int
+  proforma      Proforma @relation(fields: [proforma_id], references: [id], onDelete: Cascade)
+  designation   String
+  uom           String?
+  quantite      Float
+  prix_unitaire Float
+  remise_pct    Float    @default(0)
+  montant_net   Float
+}
+
+model Facture {
+  id                Int            @id @default(autoincrement())
+  facture_num       String         @unique
+  date              DateTime
+  client_id         Int?
+  client            Client?        @relation(fields: [client_id], references: [id], onDelete: SetNull)
+  votre_reference   String?
+  monnaie           String
+  tva_active        Boolean        @default(false)
+  tva_rate          Float          @default(20)
+  // Champs spécifiques à la facture.
+  date_paiement     DateTime?
+  livraison         String         @default("")
+  paiement          String         @default("")
+  // Référence vers le proforma source (optionnel).
+  proforma_id       Int?
+  proforma          Proforma?      @relation(fields: [proforma_id], references: [id], onDelete: SetNull)
+  // Totaux recalculés côté serveur à la création.
+  sous_total        Float
+  remise            Float
+  montant_net       Float
+  montant_tva       Float
+  montant_total     Float
+  montant_en_lettres String
+  pdf_url           String
+  created_at        DateTime       @default(now())
+  items             FactureItem[]
+}
+
+model FactureItem {
+  id            Int     @id @default(autoincrement())
+  facture_id    Int
+  facture       Facture @relation(fields: [facture_id], references: [id], onDelete: Cascade)
+  designation   String
+  uom           String?
+  quantite      Float
+  prix_unitaire Float
+  remise_pct    Float   @default(0)
+  montant_net   Float
 }
