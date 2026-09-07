@@ -19,7 +19,7 @@ export function BrandSeal() {
         className="absolute inset-0 opacity-60 bg-grain pointer-events-none"
       />
 
-      {/* ember halo exactly behind the seal */}
+      {/* brand halo exactly behind the seal */}
       <div
         aria-hidden
         className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[40rem] w-[40rem] rounded-full pointer-events-none opacity-40 blur-3xl"

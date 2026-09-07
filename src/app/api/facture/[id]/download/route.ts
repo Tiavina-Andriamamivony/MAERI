@@ -1,3 +1,4 @@
+import { getDownloadUrl } from "@vercel/blob";
 import { NextRequest } from "next/server";
 
 import prisma from "@/lib/prisma";
@@ -39,6 +40,8 @@ export async function GET(
     );
   }
 
-  console.log("[facture:download] Serving PDF for facture %d (%s)", factureId, facture.facture_num);
-  return Response.redirect(facture.pdf_url);
+  console.log("[facture:download] Envoi du PDF pour la facture #%d (%s)", factureId, facture.facture_num);
+  // URL signée : le blob est servi en pièce jointe (Content-Disposition: attachment),
+  // le navigateur télécharge le PDF au lieu de l'afficher.
+  return Response.redirect(getDownloadUrl(facture.pdf_url));
 }
