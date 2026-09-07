@@ -9,11 +9,9 @@ import {
   StyleSheet,
 } from "@react-pdf/renderer";
 
-import { formatAmount, formatPercent, formatQuantity } from "./format";
-import { TABLE_ROW_COUNT } from "./pdf-assets";
+import { formatAmount, formatDate, formatPercent, formatQuantity } from "./format";
 import { lineTotals, computeTotals } from "./totals";
-
-
+import { BANK, COMPANY, DEFAULT_CIF } from "./pdf-assets";
 
 export const LOGO_IMAGE = readFileSync(
   path.join(process.cwd(), "public", "MA-ERI.png"),
@@ -24,13 +22,14 @@ export const SIGNATURE_IMAGE = readFileSync(
 
 export const PAGE_MARGIN = 32;
 
+/** Largeurs des colonnes du tableau (somme = largeur utile de la page). */
 export const COLUMNS = {
-  designation: 238,
+  designation: 233,
   quantite: 38,
   uom: 42,
-  prix: 66,
+  prix: 70,
   remise: 40,
-  tva: 36,
+  tva: 34,
   montant: 72,
 } as const;
 
@@ -92,13 +91,16 @@ export const styles = StyleSheet.create({
   partyRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
+    // Étire les deux encadrés (MA-ERI et client) à la même hauteur.
     marginBottom: 12,
   },
   companyBlock: {
     width: 250,
     flexDirection: "row",
     alignItems: "flex-start",
+    borderWidth: 1,
+    borderColor: "#999999",
+    padding: 6,
   },
   logo: {
     width: 96,
@@ -112,9 +114,12 @@ export const styles = StyleSheet.create({
   },
   clientBlock: {
     width: 250,
-    textAlign: "right",
+    textAlign: "left",
     fontSize: 8.5,
     lineHeight: 1.35,
+    borderWidth: 1,
+    borderColor: "#999999",
+    padding: 6,
   },
   infoTable: {
     borderWidth: 1,
@@ -170,27 +175,19 @@ export const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#999999",
   },
-  emptyRow: {
-    height: 15,
-    flexDirection: "row",
-  },
-  emptyCell: {
-    flex: 1,
-    borderRightWidth: 1,
-    borderRightColor: "#999999",
-    borderBottomWidth: 1,
-    borderBottomColor: "#999999",
-  },
   bottomRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginTop: 10,
+    marginTop: 18,
   },
   arreteBlock: {
     width: 290,
     fontSize: 8,
     lineHeight: 1.5,
+    // Aligne la première ligne du texte avec la première ligne des totaux,
+    // qui commence sous la signature (hauteur 59 + marge 4).
+    marginTop: 63,
   },
   totalsBlock: {
     width: 230,
@@ -227,42 +224,12 @@ export const styles = StyleSheet.create({
     paddingTop: 8,
     fontSize: 8,
     lineHeight: 1.5,
+    textAlign: "center",
   },
   legal: {
     marginTop: 6,
   },
 });
-
-/** Single designation line — the designation already includes specs. */
-export function designationLines(item: LineItem): string[] {
-  return [item.designation];
-}
-
-export function InfoCell({
-  label,
-  last,
-}: {
-  label: string;
-  last?: boolean;
-}) {
-  const cellStyle = last
-    ? [styles.infoHeaderCell, { borderRightWidth: 0 }]
-    : styles.infoHeaderCell;
-  return <Text style={cellStyle}>{label}</Text>;
-}
-
-export function InfoValueCell({
-  value,
-  last,
-}: {
-  value: string;
-  last?: boolean;
-}) {
-  const cellStyle = last
-    ? [styles.infoValueCell, { borderRightWidth: 0 }]
-    : styles.infoValueCell;
-  return <Text style={cellStyle}>{value}</Text>;
-}
 
 export function ItemRow({
   item,
@@ -281,9 +248,7 @@ export function ItemRow({
   return (
     <View style={styles.itemRow}>
       <View style={[styles.itemCell, { width: COLUMNS.designation }]}>
-        {designationLines(item).map((line) => (
-          <Text key={line}>{line}</Text>
-        ))}
+        <Text>{item.designation}</Text>
       </View>
       <Text style={[styles.itemCell, { width: COLUMNS.quantite }]}>
         {formatQuantity(item.quantite)}
@@ -298,7 +263,12 @@ export function ItemRow({
         {item.remise_pct > 0 ? formatPercent(item.remise_pct) : ""}
       </Text>
       <Text style={[styles.itemCell, { width: COLUMNS.tva }]}>{tvaCell}</Text>
-      <Text style={[styles.itemCell, { width: COLUMNS.montant }]}>
+      <Text
+        style={[
+          styles.itemCell,
+          { width: COLUMNS.montant, borderRightWidth: 0 },
+        ]}
+      >
         {formatAmount(totals.net)}
       </Text>
     </View>
@@ -334,7 +304,10 @@ export function ItemsTableHeader() {
         TVA
       </Text>
       <Text
-        style={[styles.tableHeaderCell, { width: COLUMNS.montant }]}
+        style={[
+          styles.tableHeaderCell,
+          { width: COLUMNS.montant, borderRightWidth: 0 },
+        ]}
       >
         Montant net
       </Text>
@@ -342,22 +315,6 @@ export function ItemsTableHeader() {
   );
 }
 
-/** Empty padding row to keep a fixed table height. */
-export function EmptyItemRow({ index }: { index: number }) {
-  return (
-    <View key={`empty-${index}`} style={styles.emptyRow}>
-      <View style={styles.emptyCell} />
-      <View style={styles.emptyCell} />
-      <View style={styles.emptyCell} />
-      <View style={styles.emptyCell} />
-      <View style={styles.emptyCell} />
-      <View style={styles.emptyCell} />
-      <View style={[styles.emptyCell, { borderRightWidth: 0 }]} />
-    </View>
-  );
-}
-
-/** Full items table with padding rows. */
 export function ItemsTable({
   items,
   tvaActive,
@@ -367,8 +324,6 @@ export function ItemsTable({
   tvaActive: boolean;
   tvaRate: number;
 }) {
-  const paddingCount = Math.max(0, TABLE_ROW_COUNT - items.length);
-
   return (
     <View style={styles.table}>
       <ItemsTableHeader />
@@ -379,9 +334,6 @@ export function ItemsTable({
           tvaActive={tvaActive}
           tvaRate={tvaRate}
         />
-      ))}
-      {Array.from({ length: paddingCount }, (_, i) => (
-        <EmptyItemRow key={`pad-${items.length + i}`} index={i} />
       ))}
     </View>
   );
@@ -446,4 +398,61 @@ export function ClientInfoBlock({ client }: { client: DocumentClient }) {
   );
 }
 
-export { BANK, COMPANY, LEGAL_NOTICE, TABLE_ROW_COUNT, DEFAULT_CIF } from "./pdf-assets";
+/** Bloc MA-ERI (logo + coordonnées), encadré à gauche de l'entête. */
+export function CompanyInfoBlock({ cif }: { cif: string }) {
+  return (
+    <View style={styles.companyBlock}>
+      {/* eslint-disable-next-line jsx-a11y/alt-text -- Image @react-pdf (PDF), no alt attr */}
+      <Image src={LOGO_IMAGE} style={styles.logo} />
+      <View style={styles.companyAddress}>
+        {COMPANY.addressLines.map((line) => (
+          <Text key={line}>{line}</Text>
+        ))}
+        <Text>{`CIF:${cif || DEFAULT_CIF}`}</Text>
+      </View>
+    </View>
+  );
+}
+
+/** En-tête du document : nom MA-ERI à gauche, numéro et date à droite. */
+export function DocumentHeader({
+  label,
+  docNum,
+  date,
+}: {
+  label: string;
+  docNum: string;
+  date: Date;
+}) {
+  return (
+    <View style={styles.headerRow}>
+      <Text style={styles.companyName}>{COMPANY.name}</Text>
+      <View>
+        <Text style={styles.metaLine}>
+          <Text style={styles.metaLabel}>{label} : </Text>
+          {docNum}
+        </Text>
+        <Text style={styles.metaLine}>
+          <Text style={styles.metaLabel}>Date : </Text>
+          {formatDate(date)}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+/** Footer : coordonnées bancaires centrées, contenu additionnel optionnel. */
+export function DocumentFooter({
+  children,
+}: {
+  children?: React.ReactNode;
+}) {
+  return (
+    <View style={styles.footer}>
+      <Text>{BANK.title}</Text>
+      <Text>{BANK.address}</Text>
+      <Text>{BANK.rib}</Text>
+      {children}
+    </View>
+  );
+}

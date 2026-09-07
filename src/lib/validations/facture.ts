@@ -25,6 +25,7 @@ export const factureSchema = z.object({
   date_paiement: optionalDate,
   livraison: z.string().trim().default(""),
   paiement: z.string().trim().default(""),
+  cif: z.string().trim().default(""),
   proforma_id: z.coerce.number().int().optional().nullable(),
   // TVA globale : appliquée une fois sur le montant net, pas ligne par ligne.
   tva_active: z.boolean().default(false),

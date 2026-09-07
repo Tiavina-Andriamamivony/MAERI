@@ -1,44 +1,28 @@
 import React from "react";
 import {
   Document,
-  Image,
   Page,
   Text,
   View,
   renderToBuffer,
 } from "@react-pdf/renderer";
 
+import { formatClientCode } from "@/lib/analyse/codes";
 import type { ProformaInput } from "@/lib/validations/proforma";
 import { arreteProformaLine } from "./amount-in-words";
 import { formatDate } from "./format";
+import { LEGAL_NOTICE } from "./pdf-assets";
 import {
-  BANK,
-  COMPANY,
-  DEFAULT_CIF,
-  LEGAL_NOTICE,
-  LOGO_IMAGE,
   ClientInfoBlock,
+  CompanyInfoBlock,
+  DocumentFooter,
+  DocumentHeader,
   ItemsTable,
   TotalsBlock,
   styles,
   type DocumentClient,
 } from "./pdf-base";
 import { computeTotals } from "./totals";
-
-function CompanyInfoBlock({ cif }: { cif: string }) {
-  return (
-    <View style={styles.companyBlock}>
-      {/* eslint-disable-next-line jsx-a11y/alt-text -- Image @react-pdf (PDF), no alt attr */}
-      <Image src={LOGO_IMAGE} style={styles.logo} />
-      <View style={styles.companyAddress}>
-        {COMPANY.addressLines.map((line) => (
-          <Text key={line}>{line}</Text>
-        ))}
-        <Text>{`CIF:${cif || DEFAULT_CIF}`}</Text>
-      </View>
-    </View>
-  );
-}
 
 function PartyBlock({ proforma, client }: { proforma: ProformaInput; client: DocumentClient }) {
   return (
@@ -64,7 +48,7 @@ function InfoTable({ proforma, clientCode }: { proforma: ProformaInput; clientCo
         </Text>
       </View>
       <View style={styles.infoRow}>
-        <Text style={styles.infoValueCell}>{clientCode}</Text>
+        <Text style={styles.infoValueCell}>{formatClientCode(clientCode)}</Text>
         <Text style={styles.infoValueCell}>{proforma.votre_reference ?? ""}</Text>
         <Text style={styles.infoValueCell}>
           {formatDate(proforma.validite_offre ?? null)}
@@ -82,37 +66,11 @@ function InfoTable({ proforma, clientCode }: { proforma: ProformaInput; clientCo
   );
 }
 
-function DocumentHeader({
-  pfNum,
-  date,
-}: {
-  pfNum: string;
-  date: Date;
-}) {
-  return (
-    <View style={styles.headerRow}>
-      <Text style={styles.companyName}>{COMPANY.name}</Text>
-      <View>
-        <Text style={styles.metaLine}>
-          <Text style={styles.metaLabel}>PF N° : </Text>
-          {pfNum}
-        </Text>
-        <Text style={styles.metaLine}>
-          <Text style={styles.metaLabel}>Date : </Text>
-          {formatDate(date)}
-        </Text>
-      </View>
-    </View>
-  );
-}
-
 function BottomSection({
   proforma,
-  client,
   totals,
 }: {
   proforma: ProformaInput;
-  client: DocumentClient;
   totals: ReturnType<typeof computeTotals>;
 }) {
   return (
@@ -122,13 +80,13 @@ function BottomSection({
           {arreteProformaLine(totals.montant_total)}
         </Text>
         <Text>
-          {`Prix : Livraison à ${client.province}`}
+          {`Prix : Livraison à ${proforma.livraison_a || "–"}`}
         </Text>
         <Text>
-          {`Délai de livraison : ${proforma.delai_livraison || "8-9 semaines après confirmation de commande et paiement"}`}
+          {`Délai de livraison : ${proforma.delai_livraison || "–"}`}
         </Text>
         <Text>
-          {`Condition et mode de paiement : ${proforma.conditions_paiement || "virement bancaire (à l'ordre de MA-ERI CONSULTING)"}`}
+          {`Condition et mode de paiement : ${proforma.conditions_paiement || "–"}`}
         </Text>
       </View>
       <TotalsBlock totals={totals} />
@@ -153,7 +111,7 @@ export function ProformaDocument({
     <Document>
       <Page size="A4" style={styles.page}>
         <Text style={styles.title}>PROFORMA</Text>
-        <DocumentHeader pfNum={proforma.pf_num} date={proforma.date} />
+        <DocumentHeader label="PF N°" docNum={proforma.pf_num} date={proforma.date} />
 
         <PartyBlock proforma={proforma} client={client} />
         <InfoTable proforma={proforma} clientCode={client.code_client} />
@@ -163,14 +121,13 @@ export function ProformaDocument({
           tvaRate={proforma.tva_rate}
         />
 
-        <BottomSection proforma={proforma} client={client} totals={totals} />
+        <BottomSection proforma={proforma} totals={totals} />
 
-        <View style={styles.footer}>
-          <Text>{BANK.title}</Text>
-          <Text>{BANK.address}</Text>
-          <Text>{BANK.rib}</Text>
-          <Text style={styles.legal}>{LEGAL_NOTICE}</Text>
-        </View>
+        <DocumentFooter>
+          {proforma.clause_propriete_active && (
+            <Text style={styles.legal}>{LEGAL_NOTICE}</Text>
+          )}
+        </DocumentFooter>
       </Page>
     </Document>
   );

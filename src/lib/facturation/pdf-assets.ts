@@ -28,12 +28,6 @@ export const BANK = {
 export const LEGAL_NOTICE =
   "Les marchandises restent la propriété de MA-ERI CONSULTING jusqu'à leur paiement intégral.\nTout retard de paiement entraînera l'application d'une pénalité de 8% par mois de retard.";
 
-/**
- * Nombre de lignes d'articles réservées par le template : le bloc des totaux
- * reste ainsi à position fixe sous le tableau, même avec peu d'articles.
- */
-export const TABLE_ROW_COUNT = 11;
-
 /** Taux de TVA proposé par défaut dans le formulaire. */
 export const DEFAULT_TVA_RATE = 20;
 
@@ -45,9 +39,3 @@ export const DEFAULT_CURRENCY = "MGA";
  * alignées sur le template Excel (`public/2026 template.xlsx`).
  */
 export const DEFAULT_CIF = "0120073/DGI-M du 11/04/25";
-
-export const DEFAULT_DELAI_LIVRAISON =
-  "8-9 semaines après confirmation de commande et paiement (le délai pourrait changer suivant des évènements indépendèmment de notre volonté entre autre conditions climatiques, congestion port, guerre, congés fournisseurs, ...)";
-
-export const DEFAULT_CONDITIONS_PAIEMENT =
-  "virement bancaire (à l'ordre de MA-ERI CONSULTING)";

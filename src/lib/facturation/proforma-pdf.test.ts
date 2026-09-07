@@ -31,8 +31,10 @@ const sample: ProformaInput = {
   tva_active: false,
   tva_rate: 20,
   cif: "0120073/DGI-M du 11/04/25",
+  livraison_a: "Toamasina",
   delai_livraison: "8-9 semaines après confirmation de commande",
   conditions_paiement: "virement bancaire",
+  clause_propriete_active: false,
   items: [
     {
       article_id: 1,
@@ -88,6 +90,15 @@ describe("proformaSchema", () => {
     const items = Array.from({ length: 12 }, () => sample.items[0]);
     const parsed = proformaSchema.safeParse({ ...sample, items });
     expect(parsed.success).toBe(false);
+  });
+
+  it("accepte la clause de propriété optionnelle", () => {
+    const parsed = proformaSchema.safeParse({
+      ...sample,
+      clause_propriete_active: true,
+    });
+    expect(parsed.success).toBe(true);
+    if (parsed.success) expect(parsed.data.clause_propriete_active).toBe(true);
   });
 });
 

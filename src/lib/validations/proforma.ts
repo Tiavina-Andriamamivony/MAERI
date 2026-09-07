@@ -25,11 +25,13 @@ export const proformaSchema = z.object({
   terme_paiement: z.coerce.number().int().min(0, "Terme invalide").default(0),
   monnaie: requiredText.default("MGA"),
   cif: z.string().trim().default(""),
+  livraison_a: z.string().trim().default(""),
   delai_livraison: z.string().trim().default(""),
   conditions_paiement: z.string().trim().default(""),
   // TVA globale : appliquée une fois sur le montant net, pas ligne par ligne.
   tva_active: z.boolean().default(false),
   tva_rate: percent.default(20),
+  clause_propriete_active: z.boolean().default(false),
   items: z
     .array(proformaItemSchema)
     .min(1, "Ajoutez au moins un article")

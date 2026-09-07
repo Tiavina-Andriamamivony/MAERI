@@ -53,7 +53,7 @@ function parseDate(value: Date | string): Date {
   return new Date(Number(parts[1]), Number(parts[2]) - 1, Number(parts[3]));
 }
 
-/** Formate une date au format « jj/mm/aaaa ». */
+
 export function formatDate(value: Date | string | null): string {
   if (value === null || value === undefined || value === "") return "";
   const date = parseDate(value);

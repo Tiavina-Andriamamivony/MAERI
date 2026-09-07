@@ -105,6 +105,7 @@ export async function createFacture(
         monnaie: data.monnaie,
         tva_active: data.tva_active,
         tva_rate: data.tva_rate,
+        cif: data.cif,
         date_paiement: data.date_paiement ?? null,
         livraison: data.livraison,
         paiement: data.paiement,

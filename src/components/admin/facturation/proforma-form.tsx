@@ -76,10 +76,21 @@ type ProformaFormValues = {
   tva_active: boolean;
   tva_rate: number;
   cif: string;
+  livraison_a: string;
   delai_livraison: string;
   conditions_paiement: string;
+  clause_propriete_active: boolean;
   items: ItemValues[];
 };
+
+/** Validité de l'offre proposée par défaut dans le formulaire. */
+const OFFER_VALIDITY_DAYS = 15;
+
+function addDays(date: Date, days: number): Date {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+}
 
 function emptyItem(): ItemValues {
   return {
@@ -284,7 +295,6 @@ function ItemFields({
   );
 }
 
-
 function ProformaFormBody({
   form,
   clients,
@@ -374,6 +384,20 @@ function ProformaFormBody({
 
       <FormField
         control={form.control}
+        name="livraison_a"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Livraison à</FormLabel>
+            <FormControl>
+              <Input {...field} placeholder="Lieu de livraison" />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
         name="delai_livraison"
         render={({ field }) => (
           <FormItem>
@@ -396,6 +420,37 @@ function ProformaFormBody({
               <Textarea rows={3} {...field} />
             </FormControl>
             <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <ClauseSection form={form} />
+    </div>
+  );
+}
+
+/** Clause de propriété : affichée dans le footer PDF si cochée. */
+function ClauseSection({
+  form,
+}: {
+  form: ReturnType<typeof useForm<ProformaFormValues>>;
+}) {
+  return (
+    <div className="rounded-lg border border-border p-3">
+      <FormField
+        control={form.control}
+        name="clause_propriete_active"
+        render={({ field }) => (
+          <FormItem className="flex items-center gap-2 space-y-0">
+            <FormControl>
+              <Checkbox
+                checked={field.value}
+                onCheckedChange={field.onChange}
+              />
+            </FormControl>
+            <FormLabel className="text-sm font-normal">
+              Afficher la clause de propriété des marchandises dans le footer
+            </FormLabel>
           </FormItem>
         )}
       />
@@ -647,14 +702,18 @@ export function ProformaForm({
       client_phone: "",
       client_mail: "",
       votre_reference: "",
-      validite_offre: "",
+      validite_offre: toDateInputValue(
+        addDays(new Date(), OFFER_VALIDITY_DAYS),
+      ),
       terme_paiement: 0,
       monnaie: DEFAULT_CURRENCY,
       tva_active: false,
       tva_rate: DEFAULT_TVA_RATE,
       cif: DEFAULT_CIF,
+      livraison_a: "",
       delai_livraison: "",
       conditions_paiement: "",
+      clause_propriete_active: false,
       items: [emptyItem()],
     },
   });
@@ -707,8 +766,6 @@ export function ProformaForm({
     );
   }
 
-  
-  
   function validateForm(): boolean {
     const parsed = proformaSchema.safeParse(form.getValues());
     if (parsed.success) return true;

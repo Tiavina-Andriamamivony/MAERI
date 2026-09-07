@@ -10,6 +10,7 @@ import type { Article, Client } from "@/app/generated/prisma/client";
 import { formatClientCode } from "@/lib/analyse/codes";
 import { toDateInputValue } from "@/lib/facturation/format";
 import {
+  DEFAULT_CIF,
   DEFAULT_CURRENCY,
   DEFAULT_TVA_RATE,
 } from "@/lib/facturation/pdf-assets";
@@ -57,6 +58,7 @@ type ItemValues = {
 export type FactureFormValues = {
   facture_num: string;
   date: string;
+  cif: string;
   client_id?: number;
   client_code: string;
   client_name: string;
@@ -499,6 +501,23 @@ function FactureFormBody({
 
   return (
     <div className="grid gap-4 py-4">
+      <FormField
+        control={form.control}
+        name="cif"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>CIF</FormLabel>
+            <FormControl>
+              <Input
+                {...field}
+                placeholder="Ex. 0120073/DGI-M du 11/04/25"
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
       <div className="grid gap-3 sm:grid-cols-2">
         <FormField
           control={form.control}
@@ -608,6 +627,7 @@ export function FactureForm({
     defaultValues: {
       facture_num: DEFAULT_FACTURE_NUM,
       date: toDateInputValue(new Date()),
+      cif: DEFAULT_CIF,
       client_code: "",
       client_name: "",
       client_address: "",

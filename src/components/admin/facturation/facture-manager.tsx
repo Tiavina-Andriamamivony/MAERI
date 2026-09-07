@@ -195,6 +195,7 @@ function buildInitialDataFromProforma(
     client_id: proforma.client_id ?? undefined,
     votre_reference: proforma.votre_reference ?? "",
     monnaie: proforma.monnaie,
+    cif: proforma.cif ?? "",
     tva_active: proforma.tva_active,
     tva_rate: proforma.tva_rate,
     items,
@@ -215,6 +216,7 @@ function buildInitialDataFromParams(
       client_id: params.client_id ? Number(params.client_id) : undefined,
       votre_reference: params.votre_reference,
       monnaie: params.monnaie,
+      cif: params.cif,
       livraison: params.livraison,
       paiement: params.paiement,
       proforma_id: params.proforma_id

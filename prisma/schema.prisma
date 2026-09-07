@@ -78,8 +78,11 @@ model Proforma {
   tva_rate          Float          @default(20)
   // Champs modifiables du proforma.
   cif               String         @default("")
+  livraison_a       String         @default("")
   delai_livraison   String         @default("")
   conditions_paiement String       @default("")
+  // Clause de propriété : affichée dans le footer uniquement si cochée.
+  clause_propriete_active Boolean  @default(false)
   // Totaux recalculés côté serveur à la création.
   sous_total        Float
   remise            Float
@@ -116,6 +119,7 @@ model Facture {
   tva_active        Boolean        @default(false)
   tva_rate          Float          @default(20)
   // Champs spécifiques à la facture.
+  cif               String         @default("")
   date_paiement     DateTime?
   livraison         String         @default("")
   paiement          String         @default("")

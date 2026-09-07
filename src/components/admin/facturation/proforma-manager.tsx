@@ -176,6 +176,7 @@ export function ProformaManager({
       client_id: String(proforma.client_id ?? ""),
       votre_reference: proforma.votre_reference ?? "",
       monnaie: proforma.monnaie,
+      cif: proforma.cif ?? "",
       tva_active: String(proforma.tva_active),
       tva_rate: String(proforma.tva_rate),
       items: JSON.stringify(items),
