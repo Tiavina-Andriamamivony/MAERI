@@ -17,7 +17,7 @@ export function HomeHero() {
         className="absolute inset-0 opacity-70 bg-grain pointer-events-none"
       />
 
-      {/* Soft ember glow bottom-left */}
+      {/* Soft brand glow bottom-left */}
       <div
         aria-hidden
         className="absolute -bottom-40 -left-20 h-[36rem] w-[36rem] rounded-full pointer-events-none opacity-40 blur-3xl"

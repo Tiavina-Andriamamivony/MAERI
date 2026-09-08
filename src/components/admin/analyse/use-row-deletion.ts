@@ -5,17 +5,19 @@ import { toast } from "sonner";
 
 import type { ActionResult } from "@/lib/action-result";
 
-/** Délai d'annulation avant que la suppression ne devienne définitive. */
+/** Délai d'annulation par défaut avant suppression définitive. */
 const UNDO_DELAY_MS = 5000;
 
 /**
  * Suppression de ligne avec fenêtre d'annulation. La ligne disparaît
- * immédiatement du tableau et un toast « Annuler » s'affiche pendant 5 s :
+ * immédiatement du tableau et un toast « Annuler » s'affiche pendant
+ * `undoDelayMs` (5 s par défaut) :
  *
- * - **Annuler** dans les 5 s : le compte à rebours est stoppé, la ligne
+ * - **Annuler** dans le délai : le compte à rebours est stoppé, la ligne
  *   réapparaît et **aucun appel serveur** n'est fait.
- * - **Rien** au bout de 5 s : la server action de suppression est appelée et
- *   la ligne est retirée de la base pour de bon.
+ * - **Rien** au bout du délai : la server action de suppression est appelée,
+ *   `onDeleted` est invoqué en cas de succès, et la ligne est retirée de la
+ *   base pour de bon.
  *
  * Ce report évite de supprimer puis recréer (ce qui changerait l'`id`
  * auto-incrémenté) : un seul aller-retour, seulement si l'undo n'a pas eu lieu.
@@ -25,7 +27,15 @@ const UNDO_DELAY_MS = 5000;
  */
 export function useRowDeletion<Row>(
   action?: (id: number) => Promise<ActionResult<Row>>,
+  options?: {
+    /** Fenêtre d'annulation en millisecondes (défaut : 5 000). */
+    undoDelayMs?: number;
+    /** Appelé avec l'identifiant une fois la suppression définitive réussie. */
+    onDeleted?: (id: number) => void;
+  },
 ) {
+  const undoDelayMs = options?.undoDelayMs ?? UNDO_DELAY_MS;
+  const onDeleted = options?.onDeleted;
   const [pendingIds, setPendingIds] = useState<Set<number>>(new Set());
   // Timers de suppression en cours, indexés par identifiant de ligne.
   const timers = useRef(new Map<number, ReturnType<typeof setTimeout>>());
@@ -50,12 +60,14 @@ export function useRowDeletion<Row>(
         if (!result.success) {
           unhide(id); // échec serveur : on ré-affiche la ligne
           toast.error(result.error);
+        } else {
+          onDeleted?.(id);
         }
-      }, UNDO_DELAY_MS);
+      }, undoDelayMs);
       timers.current.set(id, timer);
 
       toast(`${label} supprimé(e).`, {
-        duration: UNDO_DELAY_MS,
+        duration: undoDelayMs,
         action: {
           label: "Annuler",
           onClick: () => {
@@ -66,7 +78,7 @@ export function useRowDeletion<Row>(
         },
       });
     },
-    [action, unhide],
+    [action, onDeleted, unhide, undoDelayMs],
   );
 
   // À la disparition du composant, on stoppe les comptes à rebours en cours

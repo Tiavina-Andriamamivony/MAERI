@@ -14,7 +14,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import Image from "next/image"
-import { BarChart3Icon, PackageIcon } from "lucide-react"
+import { BarChart3Icon, FileTextIcon, PackageIcon } from "lucide-react"
 
 import { PRODUCT_TYPES } from "@/lib/product-types"
 
@@ -39,6 +39,15 @@ const data = {
       title: "Analyses",
       url: "/admin/analyses",
       icon: <BarChart3Icon />,
+    },
+    {
+      title: "Facturation",
+      url: "/admin/facturation/proforma",
+      icon: <FileTextIcon />,
+      items: [
+        { title: "Proforma", url: "/admin/facturation/proforma" },
+        { title: "Facture", url: "/admin/facturation/facture" },
+      ],
     },
   ],
 }
